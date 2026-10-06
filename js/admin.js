@@ -1,0 +1,1 @@
+document.getElementById("newArticle")?.addEventListener("click",()=>alert("V2: aquí construiremos el formulario de alta/edición. En V3 se conectará a Supabase."));

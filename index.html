@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rigo Finance | V2</title><link rel="stylesheet" href="css/global.css"></head>
+<script src="https://jsdelivr.net"></script>
+<script>
+  // Inicializamos las constantes con tus claves del nuevo proyecto financiero
+  const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
+
+  // Creamos el cliente de Supabase global para tu página personal
+  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  
+  console.log("🚀 Conexión a Supabase Financiero lista en el frontend");
+</script>
+
+<body><header id="site-header"></header>
+<main><section class="hero"><div><span class="eyebrow">RIGO FINANCE · FP&A · AUTOMATION · AI</span>
+<h1>Más de tres décadas evolucionando con la tecnología financiera.</h1>
+<p>Finanzas, contabilidad, FP&A, automatización, modelos y tecnología, conectados para convertir datos en información útil para decidir.</p>
+<div class="actions"><a class="btn primary" href="pages/knowledge.html">Explorar conocimiento</a><a class="btn" href="pages/intelligency.html">Ver modelos</a></div></div>
+<div class="hero-card"><small>ARQUITECTURA V2</small><h2>HTML + CSS + JS</h2><p>Preparada para evolucionar hacia administración y base de datos.</p></div></section>
+<section class="section"><span class="eyebrow">ECOSISTEMA</span><h2>Un sitio que puede crecer como una aplicación.</h2>
+<div class="cards"><article><h3>Knowledge</h3><p>Contabilidad, finanzas, fiscal, FP&A y documentación.</p></article><article><h3>Automation</h3><p>Excel, VBA, SAP, Power Automate y Python.</p></article><article><h3>Intelligency</h3><p>Modelos, escenarios, razonabilidad e insights.</p></article><article><h3>AI Lab</h3><p>IA, datos, asistentes y nuevas interfaces.</p></article></div></section>
+<section class="section architecture"><div><span class="eyebrow">V2 · ARQUITECTURA</span><h2>De página web a plataforma administrable.</h2><p>Primero construimos la casa: estructura, navegación, estilos, páginas, modelos y panel administrativo. Después conectaremos Supabase.</p></div>
+<pre><code>PUBLIC SITE
+  ├── pages/
+  ├── models/
+  ├── assets/
+  └── js/
+       ↓
+    ADMIN V2
+       ↓
+   SUPABASE V3
+   ├── Database
+   ├── Storage
+   └── Auth</code></pre></section></main>
+<footer id="site-footer"></footer><script src="js/navigation.js"></script></body></html>

@@ -12,6 +12,29 @@ app.use(express.json());
 // Esta línea le dice a Node.js que sirva tus carpetas (admin, css, js, pages) directamente.
 app.use(express.static(__dirname));
 
+// 📁 RUTA DE EXPLORACIÓN (Tipo OpenWorkbook de VBA)
+// Node.js abre la carpeta física de 'models' y le regresa la lista de archivos al frontend
+const fs = require('fs');
+app.get('/api/lista-modelos-locales', (req, res) => {
+  const carpetaModels = path.join(__dirname, 'models');
+  
+  // Verificamos si la carpeta existe para que no truene el servidor
+  if (!fs.existsSync(carpetaModels)) {
+    return res.json([]);
+  }
+
+  // Leemos todos los archivos que terminen en .html
+  fs.readdir(carpetaModels, (err, archivos) => {
+    if (err) {
+      console.error('Error al leer carpeta de modelos:', err);
+      return res.status(500).json({ error: 'No se pudo leer la carpeta de modelos' });
+    }
+    const htmls = archivos.filter(archivo => archivo.endsWith('.html'));
+    res.json(htmls); // Devolvemos la lista limpia: ['consolidador.html', 'equilibrio.html', ...]
+  });
+});
+
+
 const PORT = process.env.PORT || 3000;
 
 // Cliente seguro de Supabase con privilegios de Administrador para subir tus blogs/artículos

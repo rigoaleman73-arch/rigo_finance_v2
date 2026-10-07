@@ -1,0 +1,534 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo financiero — E-commerce</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap');
+
+:root{
+  --bg:#F4F6F4;
+  --panel:#FFFFFF;
+  --ink:#1C2B22;
+  --ink-soft:#5B6B60;
+  --accent:#1B6B4A;
+  --accent-soft:#E4EFE8;
+  --gold:#B8892B;
+  --negative:#A23B2E;
+  --line:#DCE3DD;
+  --serif: 'Source Serif 4', Georgia, serif;
+  --mono: 'IBM Plex Mono', monospace;
+  --sans: 'Inter', sans-serif;
+}
+*{box-sizing:border-box;}
+body{
+  margin:0;
+  background:var(--bg);
+  color:var(--ink);
+  font-family:var(--sans);
+  padding:16px 12px 24px;
+}
+.wrap{max-width:980px;margin:0 auto;}
+
+/* header */
+.masthead{
+  border-bottom:2px solid var(--ink);
+  padding-bottom:8px;
+  margin-bottom:12px;
+  display:flex;
+  justify-content:space-between;
+  align-items:flex-end;
+  gap:24px;
+  flex-wrap:wrap;
+}
+.masthead h1{
+  font-family:var(--serif);
+  font-weight:700;
+  font-size:24px;
+  margin:0 0 4px;
+  letter-spacing:-0.01em;
+}
+.desc-input{
+  font-family:var(--sans);
+  font-size:13px;
+  color:var(--ink-soft);
+  border:none;
+  border-bottom:1px dashed var(--line);
+  background:transparent;
+  padding:2px 0;
+  width:520px;
+  max-width:100%;
+}
+.desc-input:focus{outline:none;border-bottom-color:var(--accent);}
+.eyebrow{
+  font-family:var(--mono);
+  font-size:10px;
+  letter-spacing:0.12em;
+  text-transform:uppercase;
+  color:var(--accent);
+}
+
+/* layout */
+.grid{display:grid;grid-template-columns:280px 1fr;gap:8px;}
+@media (max-width:900px){.grid{grid-template-columns:1fr;}}
+
+.panel{
+  background:var(--panel);
+  border:1px solid var(--line);
+  border-radius:2px;
+}
+.panel h2{
+  font-family:var(--serif);
+  font-size:14px;
+  font-weight:600;
+  margin:0;
+  padding:7px 14px;
+  border-bottom:1px solid var(--line);
+  background:var(--accent-soft);
+  color:var(--accent);
+}
+.group{padding:7px 14px;border-bottom:1px solid var(--line);}
+.group:last-child{border-bottom:none;}
+.field{margin-bottom:6px;}
+.field:last-child{margin-bottom:0;}
+.field label{
+  display:flex;
+  justify-content:space-between;
+  font-size:11.5px;
+  color:var(--ink-soft);
+  margin-bottom:4px;
+}
+.field label .val{
+  font-family:var(--mono);
+  font-weight:600;
+  color:var(--ink);
+}
+.field input[type=range]{
+  width:100%;
+  accent-color:var(--accent);
+}
+.field input[type=number]{
+  width:100%;
+  font-family:var(--mono);
+  font-size:12px;
+  border:1px solid var(--line);
+  border-radius:2px;
+  padding:5px 7px;
+  color:var(--ink);
+}
+
+/* kpis */
+.kpis{
+  display:grid;
+  grid-template-columns:repeat(4,1fr);
+  gap:1px;
+  background:var(--line);
+  border:1px solid var(--line);
+  margin-bottom:12px;
+}
+@media (max-width:700px){.kpis{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--panel);padding:8px 12px;}
+.kpi .label{font-family:var(--mono);font-size:9.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--ink-soft);}
+.kpi .value{font-family:var(--serif);font-size:23px;font-weight:600;margin-top:4px;}
+.kpi .value.pos{color:var(--accent);}
+.kpi .value.neg{color:var(--negative);}
+
+/* chart */
+.chart-wrap{padding:6px 10px;}
+.chart-wrap svg{width:100%;height:auto;display:block;}
+.legend{display:flex;gap:18px;font-size:10.5px;color:var(--ink-soft);padding:0 14px 8px;font-family:var(--mono);}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+/* table */
+.table-scroll{overflow-x:auto;padding-bottom:4px;}
+table{
+  border-collapse:collapse;
+  width:100%;
+  font-family:var(--mono);
+  font-size:11px;
+  min-width:1000px;
+}
+th,td{
+  padding:4px 8px;
+  text-align:right;
+  white-space:nowrap;
+}
+thead th{
+  font-family:var(--sans);
+  font-size:10px;
+  color:var(--ink-soft);
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  border-bottom:2px solid var(--ink);
+  text-align:right;
+  position:sticky;
+  top:0;
+  background:var(--panel);
+}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--panel);}
+tbody tr{border-bottom:1px solid var(--line);}
+tbody tr:hover{background:var(--accent-soft);}
+tr.total td{
+  border-top:2px solid var(--ink);
+  font-weight:600;
+  background:#fff;
+}
+td.neg{color:var(--negative);}
+td.pos{color:var(--accent);}
+
+.note{
+  font-family:var(--sans);
+  font-size:11px;
+  color:var(--ink-soft);
+  padding:7px 14px;
+  border-top:1px solid var(--line);
+  line-height:1.5;
+}
+.reset-btn{
+  font-family:var(--mono);
+  font-size:10px;
+  background:none;
+  border:1px solid var(--ink);
+  color:var(--ink);
+  padding:6px 12px;
+  cursor:pointer;
+  border-radius:2px;
+}
+.reset-btn:hover{background:var(--ink);color:var(--bg);}
+
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+.export-toolbar{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:99999;}
+.export-toolbar button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(0,0,0,.15);background:#fff;color:#222;font-size:16px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);}
+.export-toolbar button:hover{background:#f0f0f0;}
+@media print{ .export-toolbar{display:none !important;} }
+</style>
+</head>
+<body>
+<div class="export-toolbar">
+  <button onclick="window.print()" title="Imprimir">🖨️</button>
+  <button onclick="__erp_exportToExcel()" title="Exportar a Excel">📊</button>
+  <button onclick="window.print()" title="Guardar como PDF (usa el diálogo de impresión)">📄</button>
+  <button onclick="__erp_shareWhatsApp()" title="Compartir por WhatsApp">💬</button>
+</div>
+
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <div class="eyebrow">Modelo financiero · 12 meses</div>
+      <h1>Proyección de e-commerce</h1>
+      <input class="desc-input" id="bizDesc" value="Tienda en línea de productos de nicho vendidos por sitio propio y redes sociales">
+    </div>
+    <button class="reset-btn" onclick="resetDefaults()">Restablecer supuestos</button>
+  </div>
+
+  <div class="grid">
+
+    <!-- ASSUMPTIONS PANEL -->
+    <div class="panel" style="height:fit-content;">
+      <h2>Supuestos — Ingresos</h2>
+      <div class="group">
+        <div class="field">
+          <label>Visitantes mes 1 <span class="val" id="v_visitors">3,000</span></label>
+          <input type="range" id="visitors" min="200" max="50000" step="100" value="3000">
+        </div>
+        <div class="field">
+          <label>Crecimiento mensual de visitantes <span class="val" id="v_growth">8%</span></label>
+          <input type="range" id="growth" min="-10" max="40" step="1" value="8">
+        </div>
+        <div class="field">
+          <label>Tasa de conversión <span class="val" id="v_conv">2.0%</span></label>
+          <input type="range" id="conv" min="0.2" max="10" step="0.1" value="2.0">
+        </div>
+        <div class="field">
+          <label>Ticket promedio (AOV) <span class="val" id="v_aov">$450</span></label>
+          <input type="range" id="aov" min="50" max="5000" step="10" value="450">
+        </div>
+      </div>
+
+      <h2>Supuestos — Costo de venta</h2>
+      <div class="group">
+        <div class="field">
+          <label>Costo de mercancía (% de ingresos) <span class="val" id="v_cogs">40%</span></label>
+          <input type="range" id="cogs" min="10" max="85" step="1" value="40">
+        </div>
+        <div class="field">
+          <label>Envío promedio por pedido <span class="val" id="v_ship">$80</span></label>
+          <input type="range" id="ship" min="0" max="500" step="5" value="80">
+        </div>
+        <div class="field">
+          <label>Comisión de pasarela de pago <span class="val" id="v_fee">3.5%</span></label>
+          <input type="range" id="fee" min="0" max="8" step="0.1" value="3.5">
+        </div>
+      </div>
+
+      <h2>Supuestos — Costos fijos</h2>
+      <div class="group">
+        <div class="field">
+          <label>Marketing mensual <span class="val" id="v_mkt">$15,000</span></label>
+          <input type="range" id="mkt" min="0" max="200000" step="500" value="15000">
+        </div>
+        <div class="field">
+          <label>Nómina / personal <span class="val" id="v_payroll">$25,000</span></label>
+          <input type="range" id="payroll" min="0" max="300000" step="500" value="25000">
+        </div>
+        <div class="field">
+          <label>Otros fijos (software, renta, etc.) <span class="val" id="v_fixed">$8,000</span></label>
+          <input type="range" id="fixed" min="0" max="150000" step="500" value="8000">
+        </div>
+        <div class="field">
+          <label>Capital inicial en caja <span class="val" id="v_cash0">$100,000</span></label>
+          <input type="number" id="cash0" value="100000">
+        </div>
+      </div>
+      <div class="note">Los montos están en la moneda que prefieras (ej. MXN) — solo mantén la unidad consistente. Todo recalcula en vivo al mover un control.</div>
+    </div>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="kpis" id="kpis"></div>
+
+      <div class="panel" style="margin-bottom:20px;">
+        <h2>Ingresos, costos y utilidad — tendencia mensual</h2>
+        <div class="chart-wrap"><svg id="chart" viewBox="0 0 1080 195"></svg></div>
+        <div class="legend">
+          <span><i class="dot" style="background:#1B6B4A"></i>Ingresos</span>
+          <span><i class="dot" style="background:#A23B2E"></i>Costos totales</span>
+          <span><i class="dot" style="background:#B8892B"></i>Utilidad neta</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Proyección detallada — 12 meses</h2>
+        <div class="table-scroll">
+          <table id="proj"></table>
+        </div>
+        <div class="note">COGS = costo de mercancía vendida. Utilidad bruta = Ingresos − COGS − Envío − Comisión de pago. Utilidad neta = Utilidad bruta − Marketing − Nómina − Otros fijos. Caja = caja del mes anterior + utilidad neta del mes.</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ids = ['visitors','growth','conv','aov','cogs','ship','fee','mkt','payroll','fixed','cash0'];
+const defaults = {visitors:3000,growth:8,conv:2.0,aov:450,cogs:40,ship:80,fee:3.5,mkt:15000,payroll:25000,fixed:8000,cash0:100000};
+
+function fmt(n){
+  const neg = n < 0;
+  const v = Math.round(Math.abs(n)).toLocaleString('es-MX');
+  return (neg?'-$':'$')+v;
+}
+function pct(n,d){return n.toFixed(d)+'%';}
+
+function readInputs(){
+  const g = id => parseFloat(document.getElementById(id).value);
+  return {
+    visitors:g('visitors'), growth:g('growth'), conv:g('conv'), aov:g('aov'),
+    cogs:g('cogs'), ship:g('ship'), fee:g('fee'),
+    mkt:g('mkt'), payroll:g('payroll'), fixed:g('fixed'), cash0:g('cash0')
+  };
+}
+
+function updateLabels(a){
+  document.getElementById('v_visitors').textContent = Math.round(a.visitors).toLocaleString('es-MX');
+  document.getElementById('v_growth').textContent = a.growth+'%';
+  document.getElementById('v_conv').textContent = a.conv.toFixed(1)+'%';
+  document.getElementById('v_aov').textContent = fmt(a.aov);
+  document.getElementById('v_cogs').textContent = a.cogs+'%';
+  document.getElementById('v_ship').textContent = fmt(a.ship);
+  document.getElementById('v_fee').textContent = a.fee.toFixed(1)+'%';
+  document.getElementById('v_mkt').textContent = fmt(a.mkt);
+  document.getElementById('v_payroll').textContent = fmt(a.payroll);
+  document.getElementById('v_fixed').textContent = fmt(a.fixed);
+  document.getElementById('v_cash0').textContent = fmt(a.cash0);
+}
+
+function computeMonths(a){
+  const months = [];
+  let cash = a.cash0;
+  for(let i=0;i<12;i++){
+    const visitors = a.visitors * Math.pow(1 + a.growth/100, i);
+    const orders = visitors * (a.conv/100);
+    const revenue = orders * a.aov;
+    const cogsAmt = revenue * (a.cogs/100);
+    const shipAmt = orders * a.ship;
+    const feeAmt = revenue * (a.fee/100);
+    const grossProfit = revenue - cogsAmt - shipAmt - feeAmt;
+    const fixedTotal = a.mkt + a.payroll + a.fixed;
+    const netProfit = grossProfit - fixedTotal;
+    cash += netProfit;
+    months.push({
+      m:i+1, visitors, orders, revenue, cogsAmt, shipAmt, feeAmt,
+      grossProfit, mkt:a.mkt, payroll:a.payroll, fixed:a.fixed, fixedTotal,
+      netProfit, cash
+    });
+  }
+  return months;
+}
+
+function renderKPIs(months){
+  const totalRev = months.reduce((s,m)=>s+m.revenue,0);
+  const totalNet = months.reduce((s,m)=>s+m.netProfit,0);
+  const margin = totalRev ? (totalNet/totalRev*100) : 0;
+  let breakEven = months.find(m=>m.netProfit>0);
+  const endCash = months[months.length-1].cash;
+
+  const kpis = [
+    {label:'Ingresos año 1', value:fmt(totalRev), cls:''},
+    {label:'Utilidad neta año 1', value:fmt(totalNet), cls: totalNet>=0?'pos':'neg'},
+    {label:'Margen neto promedio', value:pct(margin,1), cls: margin>=0?'pos':'neg'},
+    {label:'Primer mes rentable', value: breakEven ? 'Mes '+breakEven.m : 'Ninguno en 12 meses', cls: breakEven?'pos':'neg'},
+    {label:'Caja final (mes 12)', value:fmt(endCash), cls: endCash>=0?'pos':'neg'},
+    {label:'Pedidos mes 12', value: Math.round(months[11].orders).toLocaleString('es-MX'), cls:''},
+    {label:'Ingresos mes 12', value: fmt(months[11].revenue), cls:''},
+    {label:'Utilidad neta mes 12', value: fmt(months[11].netProfit), cls: months[11].netProfit>=0?'pos':'neg'},
+  ];
+  document.getElementById('kpis').innerHTML = kpis.map(k=>
+    `<div class="kpi"><div class="label">${k.label}</div><div class="value ${k.cls}">${k.value}</div></div>`
+  ).join('');
+}
+
+function renderChart(months){
+  const W=1080,H=195,padL=50,padR=10,padT=15,padB=30;
+  const innerW = W-padL-padR, innerH = H-padT-padB;
+  const allVals = months.flatMap(m=>[m.revenue, m.cogsAmt+m.shipAmt+m.feeAmt+m.fixedTotal, m.netProfit]);
+  const maxV = Math.max(...allVals, 1);
+  const minV = Math.min(...allVals, 0);
+  const range = maxV-minV || 1;
+  const x = i => padL + (innerW/(months.length-1))*i;
+  const y = v => padT + innerH - ((v-minV)/range)*innerH;
+
+  function line(vals, color){
+    const pts = vals.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+    return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5"/>` +
+      vals.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="2.5" fill="${color}"/>`).join('');
+  }
+
+  const zeroY = y(0);
+  let svg = `<line x1="${padL}" y1="${zeroY}" x2="${W-padR}" y2="${zeroY}" stroke="#DCE3DD" stroke-width="1"/>`;
+  svg += months.map((m,i)=>`<text x="${x(i)}" y="${H-8}" font-size="9" fill="#5B6B60" text-anchor="middle" font-family="IBM Plex Mono">M${m.m}</text>`).join('');
+  svg += line(months.map(m=>m.revenue), '#1B6B4A');
+  svg += line(months.map(m=>m.cogsAmt+m.shipAmt+m.feeAmt+m.fixedTotal), '#A23B2E');
+  svg += line(months.map(m=>m.netProfit), '#B8892B');
+  document.getElementById('chart').innerHTML = svg;
+}
+
+function renderTable(months){
+  const rows = [
+    {label:'Visitantes', key:'visitors', round:true},
+    {label:'Pedidos', key:'orders', round:true},
+    {label:'Ingresos', key:'revenue', money:true},
+    {label:'Costo de mercancía', key:'cogsAmt', money:true, neg:true},
+    {label:'Envío', key:'shipAmt', money:true, neg:true},
+    {label:'Comisión de pago', key:'feeAmt', money:true, neg:true},
+    {label:'Utilidad bruta', key:'grossProfit', money:true, bold:true},
+    {label:'Marketing', key:'mkt', money:true, neg:true},
+    {label:'Nómina', key:'payroll', money:true, neg:true},
+    {label:'Otros fijos', key:'fixed', money:true, neg:true},
+    {label:'Utilidad neta', key:'netProfit', money:true, total:true},
+    {label:'Caja acumulada', key:'cash', money:true, total:true},
+  ];
+  let html = '<thead><tr><th>Concepto</th>' + months.map(m=>`<th>Mes ${m.m}</th>`).join('') + '</tr></thead><tbody>';
+  rows.forEach(r=>{
+    html += `<tr class="${r.total?'total':''}"><td>${r.label}</td>`;
+    months.forEach(m=>{
+      let v = m[r.key];
+      let display = r.money ? fmt(v) : Math.round(v).toLocaleString('es-MX');
+      let cls = '';
+      if(r.neg) cls='neg';
+      if((r.key==='netProfit'||r.key==='cash') && v<0) cls='neg';
+      if((r.key==='netProfit'||r.key==='cash'||r.key==='grossProfit') && v>=0) cls='pos';
+      html += `<td class="${cls}">${display}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  document.getElementById('proj').innerHTML = html;
+}
+
+function recalc(){
+  const a = readInputs();
+  updateLabels(a);
+  const months = computeMonths(a);
+  renderKPIs(months);
+  renderChart(months);
+  renderTable(months);
+}
+
+ids.forEach(id=>{
+  document.getElementById(id).addEventListener('input', recalc);
+});
+
+function resetDefaults(){
+  ids.forEach(id=>{ document.getElementById(id).value = defaults[id]; });
+  recalc();
+}
+
+recalc();
+</script>
+
+<script>
+function __erp_findLabel(el){
+  if (el.id) {
+    const lbl = document.querySelector(`label[for="${el.id}"]`);
+    if (lbl && lbl.textContent.trim()) return lbl.textContent.trim();
+  }
+  let node = el.closest('div, li, tr, section') || el.parentElement;
+  if (node) {
+    const clone = node.cloneNode(true);
+    clone.querySelectorAll('input, select, script, button').forEach(n => n.remove());
+    const txt = clone.textContent.replace(/\s+/g,' ').trim();
+    if (txt) return txt.slice(0, 90);
+  }
+  return el.id || el.name || 'Campo';
+}
+function __erp_collectSliders(){
+  return Array.from(document.querySelectorAll('input[type=range], input[type=number], input[type=text]')).map(el => ({
+    Campo: __erp_findLabel(el), Valor: el.value
+  })).filter(r => r.Valor !== '');
+}
+function __erp_collectKPIs(){
+  const nodes = Array.from(document.querySelectorAll('[class*="val" i], [class*="result" i], [class*="kpi" i], [class*="verdict" i], [class*="pan-value" i]'));
+  const out = []; const seenTxt = new Set();
+  nodes.forEach(el => {
+    if (el.querySelector('input, select, table')) return;
+    const txt = el.textContent.replace(/\s+/g,' ').trim();
+    if (!txt || txt.length > 70) return;
+    if (seenTxt.has(txt)) return;
+    seenTxt.add(txt);
+    out.push({ Etiqueta: __erp_findLabel(el), Valor: txt });
+  });
+  return out;
+}
+function __erp_collectTables(){
+  return Array.from(document.querySelectorAll('table')).map((t,i) => ({
+    name: 'Tabla' + (i+1),
+    rows: Array.from(t.rows).map(r => Array.from(r.cells).map(c => c.textContent.trim()))
+  })).filter(t => t.rows.length);
+}
+function __erp_exportToExcel(){
+  const wb = XLSX.utils.book_new();
+  const sliders = __erp_collectSliders();
+  if (sliders.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sliders), 'Controles');
+  const kpis = __erp_collectKPIs();
+  if (kpis.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(kpis), 'Resultados');
+  __erp_collectTables().forEach(t => {
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(t.rows), t.name.slice(0,31));
+  });
+  if (!wb.SheetNames.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['No se detectaron datos exportables autom\u00e1ticamente']]), 'Info');
+  const fname = (document.title || 'modelo').replace(/[^a-z0-9]+/gi,'_').toLowerCase().slice(0,60) + '.xlsx';
+  XLSX.writeFile(wb, fname);
+}
+function __erp_shareWhatsApp(){
+  const kpis = __erp_collectKPIs().slice(0, 6);
+  const texto = `${document.title}\n` + kpis.map(k => `${k.Etiqueta}: ${k.Valor}`).join('\n');
+  if (navigator.share) { navigator.share({ title: document.title, text: texto }).catch(()=>{}); }
+  else { window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank'); }
+}
+</script>
+</body>
+</html>

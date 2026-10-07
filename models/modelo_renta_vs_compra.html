@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Renta vs. Compra — Modelo de Decisión</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:opsz,wght@8..60,400;8..60,600;8..60,700&family=IBM+Plex+Mono:wght@400;500;600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  .export-toolbar{position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:999;}
+  .export-toolbar button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--panel);color:var(--text);font-size:17px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.35);}
+  .export-toolbar button:hover{border-color:var(--gold);}
+  @media print{ .export-toolbar{display:none !important;} body{background:#fff;color:#111;} }
+  :root{
+    --ink: #10161d;
+    --panel: #182029;
+    --panel-2: #1e2833;
+    --line: #2c3947;
+    --gold: #c9a15a;
+    --gold-soft: #8a7550;
+    --paper: #efe7d3;
+    --text: #e7e1d1;
+    --muted: #8f9aa8;
+    --green: #5b9a76;
+    --rust: #bd6a52;
+    --radius: 3px;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background: var(--ink);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    line-height:1.5;
+    padding: 40px 20px 80px;
+  }
+  .wrap{ max-width: 1180px; margin: 0 auto; }
+  header{ border-bottom: 1px solid var(--line); padding-bottom: 28px; margin-bottom: 32px; }
+  .eyebrow{ font-family:'IBM Plex Mono'; font-size:12px; color:var(--gold); letter-spacing:0.02em; margin-bottom:10px;}
+  h1{ font-family:'Source Serif 4', serif; font-weight:600; font-size: 34px; margin: 0 0 10px; color: var(--paper); }
+  header p{ color: var(--muted); max-width: 680px; margin:0; font-size:14.5px; }
+  h2{ font-family:'Source Serif 4', serif; font-weight:600; font-size: 20px; color: var(--paper); margin: 0 0 4px; }
+  .section-sub{ color: var(--muted); font-size:13px; margin: 0 0 18px; }
+  section{ margin-bottom: 46px; }
+
+  .global-grid{ display:grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 8px; }
+  .cols-2{ display:grid; grid-template-columns: 1fr 1fr; gap: 24px; }
+  @media (max-width: 880px){ .cols-2{ grid-template-columns: 1fr; } .global-grid{grid-template-columns:1fr;} }
+
+  .panel-title{ font-family:'IBM Plex Mono'; font-size: 12px; letter-spacing:0.03em; color: var(--muted); margin: 0 0 12px; padding-bottom:8px; border-bottom: 1px solid var(--line); }
+  .panel-title.buy{ color: var(--rust); }
+  .panel-title.rent{ color: var(--green); }
+
+  .ctrl-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 12px; }
+  .ctrl-card label{ display:flex; justify-content:space-between; font-size: 13px; color: var(--muted); margin-bottom:10px; }
+  .ctrl-card label .num{ font-family:'IBM Plex Mono'; font-size: 13px; color: var(--gold); }
+  .ctrl-card.global .num{ font-size: 20px; display:block; margin-bottom:10px; }
+  input[type=range]{ width: 100%; accent-color: var(--gold); height: 4px; }
+
+  .kpi-grid{ display:grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  @media (max-width: 880px){ .kpi-grid{ grid-template-columns: repeat(2,1fr);} }
+  .kpi{ background: var(--panel-2); border: 1px solid var(--line); border-left: 3px solid var(--gold-soft); border-radius: var(--radius); padding: 16px 16px; }
+  .kpi.highlight{ border-left-color: var(--gold); }
+  .kpi .label{ font-size: 11.5px; color: var(--muted); margin-bottom: 8px; }
+  .kpi .num{ font-family:'IBM Plex Mono'; font-size: 21px; color: var(--paper); }
+  .kpi .num.buy{ color: var(--rust); }
+  .kpi .num.rent{ color: var(--green); }
+
+  .recommendation{
+    background: var(--panel);
+    border: 1px solid var(--gold-soft);
+    border-radius: var(--radius);
+    padding: 18px 20px;
+    margin-bottom: 28px;
+    font-family:'Source Serif 4', serif;
+    font-size: 17px;
+    color: var(--paper);
+  }
+  .recommendation .amount{ font-family:'IBM Plex Mono'; color: var(--gold); }
+
+  .chart-grid{ display:grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 880px){ .chart-grid{ grid-template-columns: 1fr; } }
+  .chart-card{ background: var(--panel); border: 1px solid var(--line); border-radius: var(--radius); padding: 18px 18px 8px; }
+  .chart-card h3{ font-family:'Source Serif 4', serif; font-size: 15.5px; font-weight:600; color: var(--paper); margin: 0 0 12px; }
+  .chart-card canvas{ max-height: 260px; }
+
+  footer{ margin-top: 40px; padding-top: 20px; border-top: 1px solid var(--line); color: var(--muted); font-size: 12px; max-width: 780px; }
+</style>
+</head>
+<body>
+<div class="export-toolbar">
+  <button onclick="window.print()" title="Imprimir">🖨️</button>
+  <button onclick="exportToExcel()" title="Exportar a Excel">📊</button>
+  <button onclick="window.print()" title="Guardar como PDF (usa el diálogo de impresión)">📄</button>
+  <button onclick="shareWhatsApp()" title="Compartir por WhatsApp">💬</button>
+</div>
+<div class="wrap">
+
+  <header>
+    <div class="eyebrow">MODELO INTERACTIVO — RENTA VS. COMPRA</div>
+    <h1>¿Rentar o comprar? La depreciación como ancla de la decisión</h1>
+    <p>Compara el costo neto después de impuestos de comprar un activo (con financiamiento, depreciación y valor de rescate) contra rentarlo, sobre un horizonte de 5 años o más. La comparación se hace en valor presente neto (VPN) de costos.</p>
+  </header>
+
+  <section>
+    <h2>Supuestos generales</h2>
+    <p class="section-sub">Horizonte de evaluación, tasa de descuento y tasa de ISR aplicables a ambos escenarios.</p>
+    <div class="global-grid">
+      <div class="ctrl-card global">
+        <label>Horizonte de evaluación</label>
+        <span class="num" id="val-horizonte">5 años</span>
+        <input type="range" id="horizonte" min="5" max="15" step="1" value="5">
+      </div>
+      <div class="ctrl-card global">
+        <label>Tasa de descuento (costo de capital después de ISR)</label>
+        <span class="num" id="val-tasaDesc">10.0%</span>
+        <input type="range" id="tasaDesc" min="5" max="20" step="0.5" value="10">
+      </div>
+      <div class="ctrl-card global">
+        <label>Tasa ISR</label>
+        <span class="num" id="val-tasaISR">30.0%</span>
+        <input type="range" id="tasaISR" min="20" max="35" step="0.5" value="30">
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Parámetros de cada escenario</h2>
+    <p class="section-sub">Comprar: precio, financiamiento, depreciación fiscal y valor de rescate. Rentar: renta, incrementos anuales y depósito en garantía.</p>
+    <div class="cols-2">
+      <div>
+        <p class="panel-title buy">COMPRAR</p>
+        <div class="ctrl-card">
+          <label>Precio de compra del activo <span class="num" id="val-precio">$2,000,000</span></label>
+          <input type="range" id="precio" min="100000" max="10000000" step="50000" value="2000000">
+        </div>
+        <div class="ctrl-card">
+          <label>% Financiado <span class="num" id="val-pctFin">60%</span></label>
+          <input type="range" id="pctFin" min="0" max="100" step="5" value="60">
+        </div>
+        <div class="ctrl-card">
+          <label>Tasa de interés del financiamiento <span class="num" id="val-tasaInt">12.0%</span></label>
+          <input type="range" id="tasaInt" min="5" max="25" step="0.5" value="12">
+        </div>
+        <div class="ctrl-card">
+          <label>Plazo del financiamiento <span class="num" id="val-plazoFin">5 años</span></label>
+          <input type="range" id="plazoFin" min="1" max="15" step="1" value="5">
+        </div>
+        <div class="ctrl-card">
+          <label>Vida útil fiscal (depreciación) <span class="num" id="val-vidaUtil">10 años</span></label>
+          <input type="range" id="vidaUtil" min="2" max="20" step="1" value="10">
+        </div>
+        <div class="ctrl-card">
+          <label>Valor de rescate al cierre (% del precio original) <span class="num" id="val-pctResidual">30%</span></label>
+          <input type="range" id="pctResidual" min="0" max="100" step="5" value="30">
+        </div>
+        <div class="ctrl-card">
+          <label>Mantenimiento anual <span class="num" id="val-mantenimiento">$80,000</span></label>
+          <input type="range" id="mantenimiento" min="0" max="500000" step="5000" value="80000">
+        </div>
+      </div>
+      <div>
+        <p class="panel-title rent">RENTAR</p>
+        <div class="ctrl-card">
+          <label>Renta anual inicial <span class="num" id="val-rentaInicial">$350,000</span></label>
+          <input type="range" id="rentaInicial" min="0" max="2000000" step="10000" value="350000">
+        </div>
+        <div class="ctrl-card">
+          <label>Incremento anual de la renta <span class="num" id="val-incremento">4.0%</span></label>
+          <input type="range" id="incremento" min="0" max="15" step="0.5" value="4">
+        </div>
+        <div class="ctrl-card">
+          <label>Depósito en garantía (recuperable) <span class="num" id="val-deposito">$350,000</span></label>
+          <input type="range" id="deposito" min="0" max="1000000" step="10000" value="350000">
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Resultado de la evaluación</h2>
+    <p class="section-sub">Valor presente neto de costos de cada escenario a lo largo del horizonte elegido.</p>
+
+    <div class="recommendation" id="recomendacion">Calculando…</div>
+
+    <div class="kpi-grid">
+      <div class="kpi highlight"><div class="label">VPN Comprar</div><div class="num buy" id="kpi-vpnComprar">—</div></div>
+      <div class="kpi highlight"><div class="label">VPN Rentar</div><div class="num rent" id="kpi-vpnRentar">—</div></div>
+      <div class="kpi"><div class="label">Depreciación anual</div><div class="num" id="kpi-depAnual">—</div></div>
+      <div class="kpi"><div class="label">Valor en libros al cierre</div><div class="num" id="kpi-valorLibros">—</div></div>
+      <div class="kpi"><div class="label">Escudo fiscal por depreciación (VP acumulado)</div><div class="num" id="kpi-escudoDep">—</div></div>
+      <div class="kpi"><div class="label">Pago anual del financiamiento</div><div class="num" id="kpi-pagoFin">—</div></div>
+      <div class="kpi"><div class="label">Interés total pagado</div><div class="num" id="kpi-interesTotal">—</div></div>
+      <div class="kpi"><div class="label">Flujo neto por venta del activo (cierre)</div><div class="num" id="kpi-rescateNeto">—</div></div>
+    </div>
+
+    <div class="chart-grid">
+      <div class="chart-card">
+        <h3>Costo anual neto: comprar vs. rentar</h3>
+        <canvas id="chartFlujos"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Componentes del VPN por escenario</h3>
+        <canvas id="chartComponentes"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>VPN total: comprar vs. rentar</h3>
+        <canvas id="chartVPN"></canvas>
+      </div>
+      <div class="chart-card">
+        <h3>Valor en libros vs. valor de rescate</h3>
+        <canvas id="chartLibros"></canvas>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    Modelo ilustrativo con fines educativos. Supone depreciación fiscal en línea recta, financiamiento con pagos constantes (sistema francés), y que el saldo insoluto remanente al cierre del horizonte (si el plazo excede el horizonte) no se liquida dentro del análisis. La ganancia por venta del activo al cierre se calcula sobre la diferencia entre el valor de rescate y el valor en libros. No constituye asesoría fiscal ni financiera.
+  </footer>
+
+</div>
+
+<script>
+function fmt(n){
+  const sign = n < 0 ? '-' : '';
+  return sign + '$' + Math.round(Math.abs(n)).toLocaleString('es-MX');
+}
+function fmtPct(n){ return (n*100).toFixed(1) + '%'; }
+
+const ids = ['horizonte','tasaDesc','tasaISR','precio','pctFin','tasaInt','plazoFin','vidaUtil','pctResidual','mantenimiento','rentaInicial','incremento','deposito'];
+const inputs = {};
+ids.forEach(id => inputs[id] = document.getElementById(id));
+
+function displayFormatter(id, v){
+  switch(id){
+    case 'horizonte': return v + ' años';
+    case 'tasaDesc': case 'tasaISR': case 'tasaInt': case 'incremento': return v.toFixed(1) + '%';
+    case 'pctFin': case 'pctResidual': return v + '%';
+    case 'plazoFin': return v + ' años';
+    case 'vidaUtil': return v + ' años';
+    default: return fmt(v);
+  }
+}
+
+const valMap = {
+  horizonte:'val-horizonte', tasaDesc:'val-tasaDesc', tasaISR:'val-tasaISR', precio:'val-precio',
+  pctFin:'val-pctFin', tasaInt:'val-tasaInt', plazoFin:'val-plazoFin', vidaUtil:'val-vidaUtil',
+  pctResidual:'val-pctResidual', mantenimiento:'val-mantenimiento', rentaInicial:'val-rentaInicial',
+  incremento:'val-incremento', deposito:'val-deposito'
+};
+
+ids.forEach(id => {
+  inputs[id].addEventListener('input', () => {
+    document.getElementById(valMap[id]).textContent = displayFormatter(id, Number(inputs[id].value));
+    compute();
+  });
+});
+
+Chart.defaults.font.family = "'IBM Plex Mono', monospace";
+Chart.defaults.color = '#8f9aa8';
+
+const chartFlujos = new Chart(document.getElementById('chartFlujos'), {
+  type: 'line',
+  data: { labels: [], datasets: [
+    { label:'Comprar', data:[], borderColor:'#bd6a52', backgroundColor:'#bd6a52', tension:0.25 },
+    { label:'Rentar', data:[], borderColor:'#5b9a76', backgroundColor:'#5b9a76', tension:0.25 },
+  ]},
+  options: { responsive:true, plugins:{ legend:{ labels:{ color:'#e7e1d1', font:{size:11} } } },
+    scales:{ x:{ grid:{ color:'#2c3947' } }, y:{ grid:{ color:'#2c3947' }, ticks:{ callback:v=>'$'+(v/1e3).toFixed(0)+'k' } } } }
+});
+
+const chartComponentes = new Chart(document.getElementById('chartComponentes'), {
+  type: 'bar',
+  data: { labels: ['Comprar','Rentar'], datasets: [] },
+  options: { responsive:true, plugins:{ legend:{ labels:{ color:'#e7e1d1', font:{size:10} } } },
+    scales:{ x:{ stacked:true, grid:{ display:false } }, y:{ stacked:true, grid:{ color:'#2c3947' }, ticks:{ callback:v=>'$'+(v/1e6).toFixed(1)+'M' } } } }
+});
+
+const chartVPN = new Chart(document.getElementById('chartVPN'), {
+  type: 'bar',
+  data: { labels: ['VPN Comprar','VPN Rentar'], datasets: [{ label:'VPN de costos', data:[0,0], backgroundColor:['#bd6a52','#5b9a76'] }] },
+  options: { responsive:true, plugins:{ legend:{ display:false } },
+    scales:{ x:{ grid:{ display:false } }, y:{ grid:{ color:'#2c3947' }, ticks:{ callback:v=>'$'+(v/1e6).toFixed(1)+'M' } } } }
+});
+
+const chartLibros = new Chart(document.getElementById('chartLibros'), {
+  type: 'line',
+  data: { labels: [], datasets: [
+    { label:'Valor en libros', data:[], borderColor:'#c9a15a', backgroundColor:'#c9a15a', tension:0.15 },
+    { label:'Valor de rescate', data:[], borderColor:'#efe7d3', backgroundColor:'#efe7d3', borderDash:[5,4], tension:0 },
+  ]},
+  options: { responsive:true, plugins:{ legend:{ labels:{ color:'#e7e1d1', font:{size:11} } } },
+    scales:{ x:{ grid:{ color:'#2c3947' } }, y:{ grid:{ color:'#2c3947' }, ticks:{ callback:v=>'$'+(v/1e6).toFixed(1)+'M' } } } }
+});
+
+function compute(){
+  const N = Number(inputs.horizonte.value);
+  const r = Number(inputs.tasaDesc.value) / 100;
+  const tasa = Number(inputs.tasaISR.value) / 100;
+
+  const precio = Number(inputs.precio.value);
+  const pctFin = Number(inputs.pctFin.value) / 100;
+  const tasaInt = Number(inputs.tasaInt.value) / 100;
+  const plazoFin = Number(inputs.plazoFin.value);
+  const vidaUtil = Number(inputs.vidaUtil.value);
+  const pctResidual = Number(inputs.pctResidual.value) / 100;
+  const mantenimiento = Number(inputs.mantenimiento.value);
+
+  const rentaInicial = Number(inputs.rentaInicial.value);
+  const incremento = Number(inputs.incremento.value) / 100;
+  const deposito = Number(inputs.deposito.value);
+
+  const montoFinanciado = precio * pctFin;
+  const enganche = precio - montoFinanciado;
+  const payment = montoFinanciado > 0
+    ? montoFinanciado * tasaInt / (1 - Math.pow(1 + tasaInt, -plazoFin))
+    : 0;
+
+  let saldo = montoFinanciado;
+  let depAcumulada = 0;
+  let interesTotal = 0;
+  let pvMantenimientoNeto = 0, pvInteresNeto = 0, pvPrincipal = 0, pvEscudoDep = 0, pvRentaNeta = 0;
+  let escudoDepAcumuladoPV = 0;
+
+  const yearsLabels = [];
+  const flujoComprar = [];
+  const flujoRentar = [];
+  const valorLibrosSerie = [];
+  const valorRescateSerie = [];
+
+  let vpnComprarSumaAnual = 0;
+  let vpnRentarSumaAnual = 0;
+
+  for(let t = 1; t <= N; t++){
+    yearsLabels.push('Año ' + t);
+
+    // Buy side
+    let interest_t = 0, principal_t = 0;
+    if(montoFinanciado > 0 && t <= plazoFin && saldo > 0.01){
+      interest_t = saldo * tasaInt;
+      principal_t = payment - interest_t;
+      saldo -= principal_t;
+      interesTotal += interest_t;
+    }
+    const depreciacion_t = t <= vidaUtil ? precio / vidaUtil : 0;
+    depAcumulada += depreciacion_t;
+    const escudoDep_t = depreciacion_t * tasa;
+    const mantenimientoNeto_t = mantenimiento * (1 - tasa);
+    const interesNeto_t = interest_t * (1 - tasa);
+    const costoComprar_t = mantenimientoNeto_t + interesNeto_t + principal_t - escudoDep_t;
+
+    const disc = Math.pow(1 + r, t);
+    pvMantenimientoNeto += mantenimientoNeto_t / disc;
+    pvInteresNeto += interesNeto_t / disc;
+    pvPrincipal += principal_t / disc;
+    pvEscudoDep += escudoDep_t / disc;
+    escudoDepAcumuladoPV += escudoDep_t / disc;
+    vpnComprarSumaAnual += costoComprar_t / disc;
+
+    flujoComprar.push(costoComprar_t);
+    valorLibrosSerie.push(Math.max(0, precio - depAcumulada));
+    valorRescateSerie.push(precio * pctResidual);
+
+    // Rent side
+    const rentaAnual_t = rentaInicial * Math.pow(1 + incremento, t - 1);
+    const costoRenta_t = rentaAnual_t * (1 - tasa);
+    pvRentaNeta += costoRenta_t / disc;
+    vpnRentarSumaAnual += costoRenta_t / disc;
+    flujoRentar.push(costoRenta_t);
+  }
+
+  const valorLibrosFinal = Math.max(0, precio - depAcumulada);
+  const valorRescate = precio * pctResidual;
+  const gananciaGravable = Math.max(0, valorRescate - valorLibrosFinal);
+  const isrGanancia = gananciaGravable * tasa;
+  const rescateNeto = valorRescate - isrGanancia;
+  const discN = Math.pow(1 + r, N);
+  const pvRescateNeto = rescateNeto / discN;
+  const pvDepositoRecuperado = deposito / discN;
+
+  const vpnComprar = enganche + vpnComprarSumaAnual - pvRescateNeto;
+  const vpnRentar = deposito + vpnRentarSumaAnual - pvDepositoRecuperado;
+  const diferencia = vpnRentar - vpnComprar;
+
+  // KPIs
+  document.getElementById('kpi-vpnComprar').textContent = fmt(vpnComprar);
+  document.getElementById('kpi-vpnRentar').textContent = fmt(vpnRentar);
+  document.getElementById('kpi-depAnual').textContent = fmt(precio / vidaUtil);
+  document.getElementById('kpi-valorLibros').textContent = fmt(valorLibrosFinal);
+  document.getElementById('kpi-escudoDep').textContent = fmt(escudoDepAcumuladoPV);
+  document.getElementById('kpi-pagoFin').textContent = fmt(payment);
+  document.getElementById('kpi-interesTotal').textContent = fmt(interesTotal);
+  document.getElementById('kpi-rescateNeto').textContent = fmt(rescateNeto);
+
+  const rec = document.getElementById('recomendacion');
+  if(Math.abs(diferencia) < 1){
+    rec.innerHTML = 'Ambos escenarios tienen un costo presente prácticamente equivalente.';
+  } else if(diferencia > 0){
+    rec.innerHTML = `Comprar resulta más conveniente: ahorra <span class="amount">${fmt(diferencia)}</span> en valor presente frente a rentar, a lo largo de ${N} años.`;
+  } else {
+    rec.innerHTML = `Rentar resulta más conveniente: ahorra <span class="amount">${fmt(-diferencia)}</span> en valor presente frente a comprar, a lo largo de ${N} años.`;
+  }
+
+  // Charts
+  chartFlujos.data.labels = yearsLabels;
+  chartFlujos.data.datasets[0].data = flujoComprar;
+  chartFlujos.data.datasets[1].data = flujoRentar;
+  chartFlujos.update();
+
+  chartComponentes.data.datasets = [
+    { label:'Enganche', data:[enganche, null], backgroundColor:'#8a7550' },
+    { label:'Mantenimiento neto (VP)', data:[pvMantenimientoNeto, null], backgroundColor:'#bd6a52' },
+    { label:'Interés neto (VP)', data:[pvInteresNeto, null], backgroundColor:'#c9a15a' },
+    { label:'Principal (VP)', data:[pvPrincipal, null], backgroundColor:'#e7e1d1' },
+    { label:'Escudo depreciación (VP, resta)', data:[-pvEscudoDep, null], backgroundColor:'#5b9a76' },
+    { label:'Rescate neto (VP, resta)', data:[-pvRescateNeto, null], backgroundColor:'#3f6d55' },
+    { label:'Depósito', data:[null, deposito], backgroundColor:'#8a7550' },
+    { label:'Renta neta (VP)', data:[null, pvRentaNeta], backgroundColor:'#bd6a52' },
+    { label:'Depósito recuperado (VP, resta)', data:[null, -pvDepositoRecuperado], backgroundColor:'#5b9a76' },
+  ];
+  chartComponentes.update();
+
+  chartVPN.data.datasets[0].data = [vpnComprar, vpnRentar];
+  chartVPN.update();
+
+  chartLibros.data.labels = yearsLabels;
+  chartLibros.data.datasets[0].data = valorLibrosSerie;
+  chartLibros.data.datasets[1].data = valorRescateSerie;
+  chartLibros.update();
+
+  window.__lastResult = { N, yearsLabels, flujoComprar, flujoRentar, vpnComprar, vpnRentar, diferencia, valorLibrosFinal, rescateNeto, payment, interesTotal };
+}
+
+compute();
+
+function exportToExcel(){
+  const r = window.__lastResult;
+  if (!r) return;
+  const resumen = [
+    { Concepto:'Horizonte (años)', Valor:r.N },
+    { Concepto:'Precio de compra', Valor:Number(inputs.precio.value) },
+    { Concepto:'% Financiado', Valor:inputs.pctFin.value + '%' },
+    { Concepto:'Tasa de interés', Valor:inputs.tasaInt.value + '%' },
+    { Concepto:'Renta anual inicial', Valor:Number(inputs.rentaInicial.value) },
+    { Concepto:'VPN Comprar', Valor:r.vpnComprar },
+    { Concepto:'VPN Rentar', Valor:r.vpnRentar },
+    { Concepto:'Diferencia (Rentar − Comprar)', Valor:r.diferencia },
+    { Concepto:'Valor en libros al cierre', Valor:r.valorLibrosFinal },
+    { Concepto:'Flujo neto por venta al cierre', Valor:r.rescateNeto },
+    { Concepto:'Pago anual del financiamiento', Valor:r.payment },
+    { Concepto:'Interés total pagado', Valor:r.interesTotal },
+  ];
+  const flujos = r.yearsLabels.map((label,i) => ({ Año:label, CostoComprar:r.flujoComprar[i], CostoRentar:r.flujoRentar[i] }));
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(resumen), 'Resumen');
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(flujos), 'Flujos anuales');
+  XLSX.writeFile(wb, 'renta_vs_compra.xlsx');
+}
+
+function shareWhatsApp(){
+  const r = window.__lastResult;
+  if (!r) return;
+  const texto = `Renta vs. Compra (${r.N} años)\n` +
+    `VPN Comprar: ${fmt(r.vpnComprar)}\n` +
+    `VPN Rentar: ${fmt(r.vpnRentar)}\n` +
+    (r.diferencia > 0
+      ? `Comprar ahorra ${fmt(r.diferencia)} vs. rentar`
+      : `Rentar ahorra ${fmt(-r.diferencia)} vs. comprar`);
+  if (navigator.share) {
+    navigator.share({ title:'Renta vs. Compra', text: texto }).catch(()=>{});
+  } else {
+    window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+  }
+}
+</script>
+</body>
+</html>

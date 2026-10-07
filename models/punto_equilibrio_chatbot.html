@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Punto de Equilibrio + Chatbot</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1c2430;--mu:#6b7686;--ac:#0f766e;--bd:#e2e6ec;--rd:#c2410c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--card:#1b212b;--tx:#e8ecf2;--mu:#93a0b3;--ac:#2dd4bf;--bd:#2c3542;--rd:#fb923c}}
+:root[data-theme="dark"]{--bg:#12161c;--card:#1b212b;--tx:#e8ecf2;--mu:#93a0b3;--ac:#2dd4bf;--bd:#2c3542;--rd:#fb923c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;padding:16px}
+.w{max-width:760px;margin:auto}
+h1{font-size:20px;margin:0 0 12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+.mode{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mode button,.st button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px}
+.mode button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.mode input{width:90px;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx)}
+.f{margin-bottom:14px}
+.f:last-child{margin-bottom:0}
+.r{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.r label{font-weight:600}
+.st{display:flex;gap:4px;align-items:center}
+.st input{width:110px;padding:6px;text-align:right;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx)}
+input[type=range]{width:100%;accent-color:var(--ac)}
+.k{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.k div{border:1px solid var(--bd);border-radius:10px;padding:10px}
+.k span{display:block;color:var(--mu);font-size:12px}
+.k b{font-size:18px}
+.big{border-color:var(--ac)!important}.big b{color:var(--ac);font-size:22px}
+.svgw{overflow-x:auto}
+svg{width:100%;height:auto;min-width:420px}
+#msgs{height:230px;overflow-y:auto;border:1px solid var(--bd);border-radius:10px;padding:8px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px}
+.m{max-width:85%;padding:7px 10px;border-radius:10px;white-space:pre-wrap;font-size:14px}
+.m.u{align-self:flex-end;background:var(--ac);color:#fff}
+.m.b{align-self:flex-start;background:var(--bg);border:1px solid var(--bd)}
+.cin{display:flex;gap:6px}
+.cin input{flex:1;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font-size:15px}
+.cin button,.chips button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:6px 12px;cursor:pointer}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chips button{font-size:12px;border-radius:14px}
+.note{color:var(--mu);font-size:12px;margin-top:6px}
+</style>
+</head>
+<body>
+<div class="w">
+<h1>Punto de Equilibrio</h1>
+
+<div class="card mode">
+  <b>Ajustar con botones ± en:</b>
+  <button id="mP" class="on">Porcentaje %</button>
+  <button id="mI">Importe directo</button>
+  <span>Paso:</span><input id="paso" type="number" value="5" min="0" step="any">
+</div>
+
+<div class="card" id="ctl"></div>
+
+<div class="card k" id="res"></div>
+
+<div class="card"><b>Asistente de equilibrio</b> <span class="note">(local: reglas y coincidencia aproximada, sin API externa)</span>
+<div id="msgs"></div>
+<div class="cin"><input id="ci" placeholder="Ej: sube el precio 10%" autocomplete="off"><button id="mic" title="Hablar">🎤</button><button id="cs">Enviar</button></div>
+<div class="chips" id="chips"></div></div>
+
+<div class="card svgw"><svg id="ch" viewBox="0 0 600 260"></svg></div>
+</div>
+
+<script>
+var fmt=function(n){return isFinite(n)?n.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2}):'—'};
+var num=function(n){return isFinite(n)?n.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'};
+var campos=[
+ {id:'precio',t:'Precio de Venta (por unidad)',v:100,min:0,max:500,s:1},
+ {id:'unidades',t:'Unidades vendidas',v:1000,min:0,max:5000,s:10},
+ {id:'cf',t:'Costos Fijos (total)',v:30000,min:0,max:200000,s:500},
+ {id:'cv',t:'Costos Variables (por unidad)',v:60,min:0,max:500,s:1}
+];
+var modo='p';
+var S={};
+var ctl=document.getElementById('ctl');
+campos.forEach(function(c){
+  S[c.id]=c.v;
+  var d=document.createElement('div');d.className='f';
+  d.innerHTML='<div class="r"><label>'+c.t+'</label><div class="st"><button data-a="-">−</button><input type="number" step="any" id="n_'+c.id+'"><button data-a="+">+</button></div></div><input type="range" id="s_'+c.id+'" min="'+c.min+'" max="'+c.max+'" step="'+c.s+'">';
+  ctl.appendChild(d);
+  var rg=d.querySelector('input[type=range]'),nb=d.querySelector('input[type=number]');
+  rg.oninput=function(){set(c,parseFloat(rg.value))};
+  nb.oninput=function(){set(c,parseFloat(nb.value)||0,true)};
+  d.querySelectorAll('button').forEach(function(b){b.onclick=function(){
+    var p=parseFloat(document.getElementById('paso').value)||0;
+    var delta=modo==='p'?S[c.id]*p/100:p;
+    set(c,S[c.id]+(b.dataset.a==='+'?delta:-delta),true);
+  }});
+});
+function set(c,val,fromNum){
+  val=Math.max(0,Math.round(val*100)/100);
+  S[c.id]=val;
+  var rg=document.getElementById('s_'+c.id);
+  if(val>+rg.max)rg.max=Math.ceil(val*1.5);
+  rg.value=val;
+  var nb=document.getElementById('n_'+c.id);
+  if(!fromNum||document.activeElement!==nb)nb.value=val;
+  calc();
+}
+document.getElementById('mP').onclick=function(){modo='p';this.classList.add('on');document.getElementById('mI').classList.remove('on');document.getElementById('paso').value=5};
+document.getElementById('mI').onclick=function(){modo='i';this.classList.add('on');document.getElementById('mP').classList.remove('on');document.getElementById('paso').value=10};
+
+function calc(){
+  var P=S.precio,U=S.unidades,CF=S.cf,CV=S.cv;
+  var mc=P-CV,peU=mc>0?CF/mc:Infinity,peD=peU*P;
+  var ing=P*U,ct=CF+CV*U,ut=ing-ct;
+  var ms=U>0&&isFinite(peU)?(U-peU)/U*100:NaN;
+  var items=[
+   ['Margen de contribución / unidad',fmt(mc)],
+   ['Ingresos actuales',fmt(ing)],
+   ['Costos totales',fmt(ct)],
+   ['Utilidad actual',fmt(ut)],
+   ['Margen de seguridad',isFinite(ms)?num(ms)+' %':'—']
+  ];
+  var h='<div class="big"><span>Punto de equilibrio (unidades)</span><b>'+(mc>0?num(peU):'Sin equilibrio (precio ≤ costo variable)')+'</b></div>'+
+        '<div class="big"><span>Punto de equilibrio (importe)</span><b>'+(mc>0?fmt(peD):'—')+'</b></div>';
+  items.forEach(function(i){h+='<div><span>'+i[0]+'</span><b>'+i[1]+'</b></div>'});
+  document.getElementById('res').innerHTML=h;
+  dibuja(P,CF,CV,U,peU);
+}
+function dibuja(P,CF,CV,U,peU){
+  var xmax=Math.max(U,isFinite(peU)?peU:0,1)*1.4,ymax=Math.max(P*xmax,CF+CV*xmax,1);
+  var L=60,R=590,T=10,B=230;
+  var X=function(x){return L+(x/xmax)*(R-L)},Y=function(y){return B-(y/ymax)*(B-T)};
+  var s='<line x1="'+L+'" y1="'+B+'" x2="'+R+'" y2="'+B+'" stroke="currentColor" opacity=".3"/><line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+B+'" stroke="currentColor" opacity=".3"/>';
+  s+='<line x1="'+X(0)+'" y1="'+Y(0)+'" x2="'+X(xmax)+'" y2="'+Y(P*xmax)+'" stroke="#0f9d8a" stroke-width="2.5"/>';
+  s+='<line x1="'+X(0)+'" y1="'+Y(CF)+'" x2="'+X(xmax)+'" y2="'+Y(CF+CV*xmax)+'" stroke="#e2622b" stroke-width="2.5"/>';
+  s+='<line x1="'+X(0)+'" y1="'+Y(CF)+'" x2="'+X(xmax)+'" y2="'+Y(CF)+'" stroke="#8892a3" stroke-dasharray="4 4"/>';
+  if(isFinite(peU)&&peU<=xmax){s+='<circle cx="'+X(peU)+'" cy="'+Y(peU*P)+'" r="6" fill="#111" stroke="#fff" stroke-width="2"/><text x="'+(X(peU)+8)+'" y="'+(Y(peU*P)-8)+'" font-size="12" fill="currentColor">PE: '+num(peU)+' u</text>'}
+  s+='<line x1="'+X(U)+'" y1="'+T+'" x2="'+X(U)+'" y2="'+B+'" stroke="currentColor" opacity=".35" stroke-dasharray="2 4"/><text x="'+(X(U)-4)+'" y="'+(B+16)+'" font-size="11" text-anchor="end" fill="currentColor">Unidades actuales</text>';
+  s+='<text x="'+(L+6)+'" y="'+(T+12)+'" font-size="12" fill="#0f9d8a">— Ingresos</text><text x="'+(L+90)+'" y="'+(T+12)+'" font-size="12" fill="#e2622b">— Costos totales</text><text x="'+(L+200)+'" y="'+(T+12)+'" font-size="12" fill="#8892a3">- - Costos fijos</text>';
+  document.getElementById('ch').innerHTML=s;
+}
+campos.forEach(function(c){set(c,c.v)});
+</script>
+<script>
+var SIN=[
+ {k:'precio',t:['precio','precio de venta','venta','pvp']},
+ {k:'unidades',t:['unidades','piezas','volumen','cantidad','ventas en unidades']},
+ {k:'cf',t:['costos fijos','costo fijo','gastos fijos','fijos']},
+ {k:'cv',t:['costos variables','costo variable','variables','costo unitario']}
+];
+var TERMS=[];SIN.forEach(function(s){s.t.forEach(function(t){TERMS.push({k:s.k,t:t})})});
+var norm=function(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')};
+function lev(a,b){var m=[],i,j;for(i=0;i<=a.length;i++){m[i]=[i]}for(j=1;j<=b.length;j++)m[0][j]=j;
+  for(i=1;i<=a.length;i++)for(j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return m[a.length][b.length]}
+function campo(txt){
+  var w=txt.replace(/[^a-z0-9% ]/g,' ').split(/\s+/).filter(Boolean),best=null,g=[];
+  for(var i=0;i<w.length;i++){g.push(w[i]);if(i+1<w.length)g.push(w[i]+' '+w[i+1])}
+  g.forEach(function(x){
+    if(x.length<4||/^\d/.test(x))return;
+    TERMS.forEach(function(t){
+      var d=lev(x,t.t);if(d>Math.floor(t.t.length/5))return;
+      var sc=d/t.t.length;
+      if(!best||sc<best.s-1e-9||(Math.abs(sc-best.s)<1e-9&&x.length>best.l))best={k:t.k,s:sc,l:x.length};
+    });
+  });
+  return best?best.k:null;
+}
+var NOM={precio:'Precio de Venta',unidades:'Unidades',cf:'Costos Fijos',cv:'Costos Variables'};
+function C(k){return campos.filter(function(c){return c.id===k})[0]}
+function st(){var mc=S.precio-S.cv,pe=mc>0?S.cf/mc:Infinity;return{mc:mc,pe:pe,ut:S.precio*S.unidades-S.cf-S.cv*S.unidades}}
+function resumen(){var s=st();return s.mc>0?'Punto de equilibrio: '+num(s.pe)+' unidades ('+fmt(s.pe*S.precio)+').\nUtilidad actual: '+fmt(s.ut)+'.':'Con el precio actual no hay equilibrio: el precio debe ser mayor al costo variable.'}
+function cmd(t){
+  var n=t.match(/(\d+(?:\.\d+)?)\s*(%|por ?ciento)?/),val=n?parseFloat(n[1]):null,pct=n&&!!n[2];
+  var k=campo(t);
+  var m=t.match(/(?:ganar|utilidad(?: objetivo| de)?)\s*\$?\s*(\d+(?:\.\d+)?)/);
+  if(m){var mc=S.precio-S.cv;if(mc<=0)return 'Con este precio y costo variable no hay margen positivo.';var u=(S.cf+parseFloat(m[1]))/mc;return 'Para ganar '+fmt(parseFloat(m[1]))+' necesitas vender '+num(u)+' unidades ('+fmt(u*S.precio)+' en ventas).'}
+  if(/reinicia|restablece|reset/.test(t)){campos.forEach(function(c){set(c,c.v)});return 'Valores restablecidos.\n'+resumen()}
+  if(k&&val!==null){
+    var up=/\b(sube|subir|aumenta|incrementa|suma|sumale|mas)\b/.test(t),dn=/\b(baja|bajar|reduce|disminuye|resta|quita|menos)\b/.test(t),c=C(k),old=S[k],nv;
+    if(up||dn){var d=pct?old*val/100:val;nv=old+(up?d:-d)}else nv=pct?old*(1+val/100):val;
+    set(c,nv);
+    return NOM[k]+': '+num(old)+' → '+num(S[k])+'.\n'+resumen();
+  }
+  if(k&&val===null)return NOM[k]+' actual: '+num(S[k])+'.';
+  if(/equilibrio|breakeven|break even|resumen|estado|utilidad|ganancia/.test(t))return resumen();
+  if(/margen/.test(t)){var s=st();return 'Margen de contribución: '+fmt(s.mc)+' por unidad ('+num(S.precio?s.mc/S.precio*100:0)+' %).'}
+  if(/ayuda|help|que puedes|como/.test(t))return 'Puedo ajustar valores y responder preguntas:\n• "sube el precio 10%"\n• "baja costos variables 5"\n• "pon unidades en 1500"\n• "cuál es el punto de equilibrio"\n• "cuántas unidades para ganar 20000"\n• "reinicia"';
+  return 'No lo entendí. Escribe "ayuda" para ver ejemplos.';
+}
+function add(c,x){var d=document.createElement('div');d.className='m '+c;d.textContent=x;var b=document.getElementById('msgs');b.appendChild(d);b.scrollTop=b.scrollHeight}
+function send(txt){
+  txt=(txt||document.getElementById('ci').value).trim();if(!txt)return;
+  document.getElementById('ci').value='';add('u',txt);
+  var t=w2n(norm(txt)).replace(/(\d),(\d{3})/g,'$1$2'),parts=t.split(/\s+y\s+|;/),out=[];
+  parts.forEach(function(p){out.push(cmd(p))});
+  add('b',out.join('\n\n'));
+}
+document.getElementById('cs').onclick=function(){send()};
+document.getElementById('ci').addEventListener('keydown',function(e){if(e.key==='Enter'||e.keyCode===13){e.preventDefault();send()}});
+['Punto de equilibrio','Sube el precio 10%','Baja costos fijos 5000','Pon unidades en 1500','Unidades para ganar 20000','Ayuda'].forEach(function(x){var b=document.createElement('button');b.textContent=x;b.onclick=function(){send(x)};document.getElementById('chips').appendChild(b)});
+add('b','Hola, soy el asistente local. Puedes escribir o usar el micrófono 🎤.\nPuedo mover los valores del modelo y calcular el equilibrio. Puedo mover los valores del modelo y calcular el equilibrio. Escribe "ayuda" para ver ejemplos.');
+var U={cero:0,uno:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20,veintiuno:21,veintidos:22,veintitres:23,veinticuatro:24,veinticinco:25,veintiseis:26,veintisiete:27,veintiocho:28,veintinueve:29,treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,ochenta:80,noventa:90,cien:100,ciento:100,doscientos:200,trescientos:300,cuatrocientos:400,quinientos:500,seiscientos:600,setecientos:700,ochocientos:800,novecientos:900};
+function w2n(t){
+  var w=t.split(' '),out=[],r=null;
+  function fl(){if(r){out.push(String(r.t+r.c));r=null}}
+  for(var i=0;i<w.length;i++){
+    var x=w[i];
+    if(U[x]!==undefined&&!(x==='ciento'&&w[i-1]==='por')){r=r||{t:0,c:0};r.c+=U[x]}
+    else if(r&&x==='y'&&U[w[i-1]]>=30&&U[w[i-1]]<100&&U[w[i+1]]>=1&&U[w[i+1]]<10){}
+    else if(x==='mil'){r=r||{t:0,c:0};r.t+=(r.c||1)*1000;r.c=0}
+    else if(x==='millon'||x==='millones'){r=r||{t:0,c:0};r.t+=(r.c||1)*1e6;r.c=0}
+    else{fl();out.push(x)}
+  }
+  fl();return out.join(' ');
+}
+(function(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition,mic=document.getElementById('mic'),rec=null,on=false;
+  mic.onclick=function(){
+    if(!SR){add('b','Este navegador no soporta reconocimiento de voz. Usa Chrome, Edge o Safari.');return}
+    if(on){rec.stop();return}
+    rec=new SR();rec.lang='es-MX';rec.interimResults=false;rec.maxAlternatives=1;
+    rec.onstart=function(){on=true;mic.textContent='⏹';mic.style.background='#c2410c';mic.style.color='#fff';add('b','Escuchando… habla ahora.')};
+    rec.onend=function(){on=false;mic.textContent='🎤';mic.style.background='';mic.style.color=''};
+    rec.onresult=function(e){var s=e.results[0][0].transcript;document.getElementById('ci').value=w2n(norm(s)).replace(/ por ?ciento/g,'%');send()};
+    rec.onerror=function(e){
+      var m={'not-allowed':'El navegador bloqueó el micrófono. Dentro de esta vista suele estar bloqueado: descarga el archivo, ábrelo en Chrome o Edge y permite el micrófono.','service-not-allowed':'El micrófono está bloqueado en esta vista. Descarga el archivo y ábrelo directo en Chrome o Edge.','no-speech':'No escuché nada. Intenta de nuevo, un poco más cerca del micrófono.','audio-capture':'No encuentro ningún micrófono conectado.','network':'El reconocimiento de voz del navegador necesita internet.'};
+      add('b',m[e.error]||('Error de voz: '+e.error));
+    };
+    try{rec.start()}catch(err){add('b','No se pudo iniciar el micrófono: '+err.message)}
+  };
+})();
+</script>
+</body>
+</html>

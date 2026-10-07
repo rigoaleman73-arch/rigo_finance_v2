@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo de Proyección P&L — 12 Meses</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#F1E9D8; --paper-2:#E8DEC7; --ink:#1E2A38; --ink-soft:#4A5A6A;
+  --brass:#B98B3E; --brass-dark:#8C6A2E; --rust:#A6402F; --amber:#C08A2E;
+  --green:#3E6350; --line:#C9BFA8; --shadow:rgba(30,42,56,0.18);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;padding:26px 16px 60px;}
+.wrap{max-width:1180px;margin:0 auto;}
+
+.masthead{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;border-bottom:3px double var(--ink);padding-bottom:16px;margin-bottom:18px;}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--brass-dark);margin-bottom:6px;}
+h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(22px,3.4vw,32px);margin:0 0 4px;letter-spacing:-0.01em;}
+.desc-input{font-size:12.5px;color:var(--ink-soft);border:none;border-bottom:1px dashed var(--line);background:transparent;padding:2px 0;width:480px;max-width:100%;font-family:'Inter',sans-serif;}
+.desc-input:focus{outline:none;border-bottom-color:var(--brass);}
+.btn{font-family:'IBM Plex Mono',monospace;font-size:11px;background:var(--ink);color:var(--paper);border:none;border-radius:3px;padding:9px 14px;cursor:pointer;}
+.btn:hover{background:var(--brass-dark);}
+
+/* Scenario selector */
+.scenario-bar{display:flex;align-items:center;gap:10px;flex-wrap:wrap;background:var(--paper-2);border:1px solid var(--line);border-radius:4px;padding:12px 16px;margin-bottom:20px;}
+.scenario-label{font-family:'IBM Plex Mono',monospace;font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-soft);margin-right:4px;}
+.scenario-btn{font-family:'IBM Plex Mono',monospace;font-size:12px;padding:8px 16px;border-radius:20px;border:1px solid var(--line);background:var(--paper);color:var(--ink-soft);cursor:pointer;font-weight:600;}
+.scenario-btn.active.pesimista{background:var(--rust);border-color:var(--rust);color:var(--paper);}
+.scenario-btn.active.base{background:var(--ink);border-color:var(--ink);color:var(--paper);}
+.scenario-btn.active.optimista{background:var(--green);border-color:var(--green);color:var(--paper);}
+.scenario-note{font-size:11px;color:var(--ink-soft);margin-left:auto;font-family:'IBM Plex Mono',monospace;}
+
+/* layout */
+.grid{display:grid;grid-template-columns:300px 1fr;gap:14px;}
+@media (max-width:960px){.grid{grid-template-columns:1fr;}}
+.panel{background:var(--paper-2);border:1px solid var(--line);border-radius:4px;height:fit-content;}
+.panel h2{font-family:'Fraunces',serif;font-size:14px;font-weight:600;margin:0;padding:9px 16px;border-bottom:1px solid var(--line);color:var(--brass-dark);}
+.group{padding:10px 16px 4px;border-bottom:1px solid var(--line);}
+.group:last-child{border-bottom:none;}
+.field{margin-bottom:12px;}
+.field label{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-soft);margin-bottom:5px;gap:8px;}
+.field label .val{font-family:'IBM Plex Mono',monospace;font-weight:700;color:var(--brass-dark);white-space:nowrap;}
+input[type=range]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);outline:none;}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:16px;height:16px;border-radius:50%;background:var(--brass);border:2px solid var(--paper);box-shadow:0 1px 4px var(--shadow);cursor:pointer;}
+input[type=range]::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--brass);border:2px solid var(--paper);cursor:pointer;}
+input[type=number]{width:100%;font-family:'IBM Plex Mono',monospace;font-size:12px;border:1px solid var(--line);border-radius:3px;padding:6px 8px;color:var(--ink);background:var(--paper);}
+
+/* kpis */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:1px;background:var(--line);border:1px solid var(--line);margin-bottom:16px;border-radius:4px;overflow:hidden;}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,1fr);}}
+.kpi{background:var(--paper-2);padding:12px 14px;}
+.kpi .label{font-family:'IBM Plex Mono',monospace;font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-soft);}
+.kpi .value{font-family:'Fraunces',serif;font-size:21px;font-weight:600;margin-top:5px;}
+.kpi .value.pos{color:var(--green);}
+.kpi .value.neg{color:var(--rust);}
+
+/* chart */
+.chart-panel{margin-bottom:18px;}
+.chart-wrap{padding:8px 12px 4px;}
+.chart-wrap svg{width:100%;height:auto;display:block;}
+.legend{display:flex;gap:18px;font-size:10.5px;color:var(--ink-soft);padding:0 16px 10px;font-family:'IBM Plex Mono',monospace;flex-wrap:wrap;}
+.legend span{display:inline-flex;align-items:center;gap:6px;}
+.dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+/* Benchmark config */
+details.bench{background:var(--paper-2);border:1px solid var(--line);border-radius:4px;margin-bottom:20px;}
+details.bench summary{cursor:pointer;list-style:none;padding:12px 18px;font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--ink);display:flex;align-items:center;gap:8px;}
+details.bench summary::-webkit-details-marker{display:none;}
+details.bench summary::before{content:"▸";color:var(--brass-dark);transition:transform .15s;}
+details.bench[open] summary::before{transform:rotate(90deg);}
+.bench-body{padding:4px 18px 18px;border-top:1px dashed var(--line);}
+.bench-row{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin-top:14px;align-items:end;}
+@media (max-width:760px){.bench-row{grid-template-columns:1fr;}}
+.bench-field label{display:block;font-size:11px;color:var(--ink-soft);margin-bottom:5px;font-family:'IBM Plex Mono',monospace;text-transform:uppercase;letter-spacing:.03em;}
+.bench-field select, .bench-field input[type=number]{width:100%;padding:8px 9px;border:1px solid var(--line);border-radius:3px;background:var(--paper);font-family:'IBM Plex Mono',monospace;font-size:12.5px;color:var(--ink);}
+.bench-hint{font-size:10.5px;color:var(--ink-soft);margin-top:10px;line-height:1.5;font-family:'IBM Plex Mono',monospace;}
+.bench-toolbar{display:flex;gap:10px;margin-top:12px;}
+
+
+.insights-panel{margin-bottom:18px;}
+.insights-list{padding:10px 16px 14px;}
+.insight{padding:9px 13px;margin-bottom:8px;border-left:3px solid var(--brass);background:rgba(185,139,62,.08);border-radius:0 3px 3px 0;font-size:12.5px;line-height:1.55;}
+.insight:last-child{margin-bottom:0;}
+.insight.pos{border-left-color:var(--green);background:rgba(62,99,80,.08);}
+.insight.warn{border-left-color:var(--rust);background:rgba(166,64,47,.08);}
+.insight b{font-weight:700;}
+
+
+.table-scroll{overflow-x:auto;padding-bottom:4px;}
+table{border-collapse:collapse;width:100%;font-family:'IBM Plex Mono',monospace;font-size:10.5px;min-width:1080px;}
+th,td{padding:5px 9px;text-align:right;white-space:nowrap;}
+thead th{font-family:'Inter',sans-serif;font-size:9.5px;color:var(--ink-soft);text-transform:uppercase;letter-spacing:.04em;border-bottom:2px solid var(--ink);text-align:right;position:sticky;top:0;background:var(--paper-2);}
+th:first-child,td:first-child{text-align:left;position:sticky;left:0;background:var(--paper-2);font-family:'Inter',sans-serif;font-weight:500;}
+tbody tr{border-bottom:1px solid var(--line);}
+tbody tr:hover{background:rgba(185,139,62,.08);}
+tr.subtotal td{border-top:1px solid var(--ink);font-weight:700;}
+tr.total td{border-top:2px double var(--ink);font-weight:700;}
+td.neg{color:var(--rust);}
+td.pos{color:var(--green);}
+
+.note{font-size:11px;color:var(--ink-soft);padding:9px 16px;border-top:1px solid var(--line);line-height:1.6;font-family:'IBM Plex Mono',monospace;}
+</style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+.export-toolbar{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:99999;}
+.export-toolbar button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(0,0,0,.15);background:#fff;color:#222;font-size:16px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);}
+.export-toolbar button:hover{background:#f0f0f0;}
+@media print{ .export-toolbar{display:none !important;} }
+</style>
+</head>
+<body>
+<div class="export-toolbar">
+  <button onclick="window.print()" title="Imprimir">🖨️</button>
+  <button onclick="__erp_exportToExcel()" title="Exportar a Excel">📊</button>
+  <button onclick="window.print()" title="Guardar como PDF (usa el diálogo de impresión)">📄</button>
+  <button onclick="__erp_shareWhatsApp()" title="Compartir por WhatsApp">💬</button>
+</div>
+
+<div class="wrap">
+
+  <div class="masthead">
+    <div>
+      <div class="eyebrow">Modelo financiero · Proyección 12 meses</div>
+      <h1>Proyección de P&L — Volumen × Precio</h1>
+      <input class="desc-input" id="bizDesc" value="Negocio genérico: ingreso = volumen de unidades × precio, con 5 rubros de gasto operativo">
+    </div>
+    <button class="btn" onclick="resetDefaults()">↺ Restablecer supuestos</button>
+  </div>
+
+  <div class="scenario-bar">
+    <span class="scenario-label">Escenario</span>
+    <button class="scenario-btn pesimista" data-scenario="pesimista">🔻 Pesimista</button>
+    <button class="scenario-btn base active" data-scenario="base">▪ Base</button>
+    <button class="scenario-btn optimista" data-scenario="optimista">🔺 Optimista</button>
+    <span class="scenario-note" id="scenarioNote"></span>
+  </div>
+
+  <details class="bench">
+    <summary>📊 Configurar Benchmark de Industria (opcional, para comparar tus resultados)</summary>
+    <div class="bench-body">
+      <p class="bench-hint">Elige un sector de ejemplo para rellenar rápido, o edita los dos campos directamente con tu propia fuente. Cuando cambien las cifras del próximo año, solo actualiza aquí.</p>
+      <div class="bench-row">
+        <div class="bench-field">
+          <label>Sector de referencia (ejemplos)</label>
+          <select id="benchSector">
+            <option value="custom">— Personalizado —</option>
+            <option value="saas">Software / SaaS</option>
+            <option value="prof">Servicios Profesionales</option>
+            <option value="manuf">Manufactura</option>
+            <option value="retailGen">Retail General</option>
+            <option value="retailFood">Retail Abarrotes / Alimentos</option>
+            <option value="restaurant">Restaurantes</option>
+            <option value="pharma">Farmacéutica</option>
+          </select>
+        </div>
+        <div class="bench-field">
+          <label>Margen EBITDA de referencia (%)</label>
+          <input type="number" id="benchMargin" step="0.1" value="17.4">
+        </div>
+        <div class="bench-field">
+          <label>Tasa efectiva de ISR de referencia (%)</label>
+          <input type="number" id="benchTax" step="0.1" value="30">
+        </div>
+      </div>
+      <p class="bench-hint">Márgenes de ejemplo tomados de la base de datos por sector de Aswath Damodaran (NYU Stern, EE.UU., ene. 2026) — sirven de punto de partida, no como cifra oficial de tu mercado. La tasa de ISR de referencia parte de la tasa corporativa estatutaria de México (30%); ajústala si tu sector tiene un régimen o estímulo distinto.</p>
+      <div class="bench-toolbar">
+        <button class="btn" id="btnBenchExport">📥 Exportar benchmark (.json)</button>
+        <button class="btn" id="btnBenchImportTrigger">📤 Importar benchmark (.json)</button>
+        <input type="file" id="benchFileImport" accept="application/json" style="display:none;">
+      </div>
+    </div>
+  </details>
+
+  <div class="grid">
+
+    <!-- ASSUMPTIONS PANEL -->
+    <div class="panel">
+      <h2>Supuestos — Ingresos</h2>
+      <div class="group">
+        <div class="field">
+          <label>Volumen de unidades, mes 1 <span class="val" id="v_vol">1,000</span></label>
+          <input type="range" id="vol" min="10" max="50000" step="10" value="1000">
+        </div>
+        <div class="field">
+          <label>Crecimiento mensual de volumen <span class="val" id="v_volg">5%</span></label>
+          <input type="range" id="volg" min="-15" max="30" step="1" value="5">
+        </div>
+        <div class="field">
+          <label>Precio unitario <span class="val" id="v_precio">$500</span></label>
+          <input type="range" id="precio" min="10" max="20000" step="10" value="500">
+        </div>
+        <div class="field">
+          <label>Inflación mensual de precio <span class="val" id="v_precg">1.0%</span></label>
+          <input type="range" id="precg" min="-5" max="10" step="0.1" value="1.0">
+        </div>
+      </div>
+
+      <h2>Supuestos — Costo de Ventas</h2>
+      <div class="group">
+        <div class="field">
+          <label>Costo de ventas (% de ingresos) <span class="val" id="v_cogs">45%</span></label>
+          <input type="range" id="cogs" min="5" max="90" step="1" value="45">
+        </div>
+      </div>
+
+      <h2>Supuestos — Gastos Operativos (5 rubros)</h2>
+      <div class="group">
+        <div class="field">
+          <label>Nómina <span class="val" id="v_nomina">$180,000</span></label>
+          <input type="range" id="nomina" min="0" max="1500000" step="1000" value="180000">
+        </div>
+        <div class="field">
+          <label>Marketing y Ventas <span class="val" id="v_mkt">$60,000</span></label>
+          <input type="range" id="mkt" min="0" max="1000000" step="1000" value="60000">
+        </div>
+        <div class="field">
+          <label>Renta y Servicios <span class="val" id="v_renta">$40,000</span></label>
+          <input type="range" id="renta" min="0" max="500000" step="1000" value="40000">
+        </div>
+        <div class="field">
+          <label>Administración y Otros <span class="val" id="v_admin">$35,000</span></label>
+          <input type="range" id="admin" min="0" max="500000" step="1000" value="35000">
+        </div>
+        <div class="field">
+          <label>Depreciación y Amortización <span class="val" id="v_dep">$20,000</span></label>
+          <input type="range" id="dep" min="0" max="300000" step="1000" value="20000">
+        </div>
+        <div class="field">
+          <label>Inflación mensual de gastos (excepto depreciación) <span class="val" id="v_infg">0.5%</span></label>
+          <input type="range" id="infg" min="0" max="5" step="0.1" value="0.5">
+        </div>
+      </div>
+
+      <h2>Supuestos — Impuestos y Caja</h2>
+      <div class="group">
+        <div class="field">
+          <label>Tasa efectiva de ISR <span class="val" id="v_isr">30%</span></label>
+          <input type="range" id="isr" min="0" max="35" step="1" value="30">
+        </div>
+        <div class="field">
+          <label>Caja inicial <span class="val" id="v_cash0">$500,000</span></label>
+          <input type="number" id="cash0" value="500000">
+        </div>
+      </div>
+      <div class="note">Montos en la moneda que prefieras (ej. MXN), manteniendo unidad consistente. La depreciación no escala con la inflación de gastos (se asume fija) y se suma de vuelta al calcular la caja, por no ser una salida real de efectivo.</div>
+    </div>
+
+    <!-- RESULTS -->
+    <div>
+      <div class="kpis" id="kpis"></div>
+
+      <div class="panel insights-panel">
+        <h2>🔎 Insights automáticos</h2>
+        <div class="insights-list" id="insights"></div>
+      </div>
+
+      <div class="panel chart-panel">
+        <h2>Ingresos, costos totales y utilidad — tendencia mensual</h2>
+        <div class="chart-wrap"><svg id="chart" viewBox="0 0 1080 200"></svg></div>
+        <div class="legend">
+          <span><i class="dot" style="background:#B98B3E"></i>Ingresos</span>
+          <span><i class="dot" style="background:#A6402F"></i>Costos + Gastos totales</span>
+          <span><i class="dot" style="background:#3E6350"></i>Utilidad neta</span>
+        </div>
+      </div>
+
+      <div class="panel">
+        <h2>Proyección detallada — 12 meses (Estado de Resultados)</h2>
+        <div class="table-scroll"><table id="proj"></table></div>
+        <div class="note">EBITDA = Utilidad Bruta − Gastos Operativos (sin depreciación). EBIT = EBITDA − Depreciación. ISR se aplica solo si el EBIT del mes es positivo. Caja = caja del mes anterior + Utilidad Neta + Depreciación (no es salida de efectivo).</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const ids = ['vol','volg','precio','precg','cogs','nomina','mkt','renta','admin','dep','infg','isr','cash0'];
+const defaults = {vol:1000,volg:5,precio:500,precg:1.0,cogs:45,nomina:180000,mkt:60000,renta:40000,admin:35000,dep:20000,infg:0.5,isr:30,cash0:500000};
+
+const SCENARIOS = {
+  pesimista: { volgDelta:-4, precgDelta:-1, cogsDelta:+3, label:'Volumen −4pts, precio −1pt, costo de ventas +3pts vs. base' },
+  base:      { volgDelta:0,  precgDelta:0,  cogsDelta:0,  label:'Supuestos tal cual los capturaste, sin ajuste' },
+  optimista: { volgDelta:+4, precgDelta:+1, cogsDelta:-2, label:'Volumen +4pts, precio +1pt, costo de ventas −2pts vs. base' },
+};
+let scenario = 'base';
+
+function fmt(n){
+  const neg = n < 0;
+  const v = Math.round(Math.abs(n)).toLocaleString('es-MX');
+  return (neg?'-$':'$')+v;
+}
+function pct(n,d){return n.toFixed(d)+'%';}
+
+function readInputs(){
+  const g = id => parseFloat(document.getElementById(id).value);
+  return {
+    vol:g('vol'), volg:g('volg'), precio:g('precio'), precg:g('precg'),
+    cogs:g('cogs'), nomina:g('nomina'), mkt:g('mkt'), renta:g('renta'),
+    admin:g('admin'), dep:g('dep'), infg:g('infg'), isr:g('isr'), cash0:g('cash0')
+  };
+}
+
+function updateLabels(a){
+  document.getElementById('v_vol').textContent = Math.round(a.vol).toLocaleString('es-MX');
+  document.getElementById('v_volg').textContent = a.volg+'%';
+  document.getElementById('v_precio').textContent = fmt(a.precio);
+  document.getElementById('v_precg').textContent = a.precg.toFixed(1)+'%';
+  document.getElementById('v_cogs').textContent = a.cogs+'%';
+  document.getElementById('v_nomina').textContent = fmt(a.nomina);
+  document.getElementById('v_mkt').textContent = fmt(a.mkt);
+  document.getElementById('v_renta').textContent = fmt(a.renta);
+  document.getElementById('v_admin').textContent = fmt(a.admin);
+  document.getElementById('v_dep').textContent = fmt(a.dep);
+  document.getElementById('v_infg').textContent = a.infg.toFixed(1)+'%';
+  document.getElementById('v_isr').textContent = a.isr+'%';
+  document.getElementById('v_cash0').textContent = fmt(a.cash0);
+}
+
+function computeMonths(a, scenarioKey){
+  const sc = SCENARIOS[scenarioKey];
+  const volg = (a.volg + sc.volgDelta) / 100;
+  const precg = (a.precg + sc.precgDelta) / 100;
+  const cogsPct = Math.max(0, Math.min(100, a.cogs + sc.cogsDelta)) / 100;
+  const infg = a.infg / 100;
+
+  const months = [];
+  let cash = a.cash0;
+  for(let i=0;i<12;i++){
+    const volumen = a.vol * Math.pow(1+volg, i);
+    const precio = a.precio * Math.pow(1+precg, i);
+    const revenue = volumen * precio;
+    const cogsAmt = revenue * cogsPct;
+    const grossProfit = revenue - cogsAmt;
+
+    const escala = Math.pow(1+infg, i);
+    const nomina = a.nomina * escala;
+    const mkt = a.mkt * escala;
+    const renta = a.renta * escala;
+    const admin = a.admin * escala;
+    const dep = a.dep; // fija, no escala
+
+    const opexExDep = nomina + mkt + renta + admin;
+    const ebitda = grossProfit - opexExDep;
+    const ebit = ebitda - dep;
+    const isrAmt = ebit > 0 ? ebit * (a.isr/100) : 0;
+    const netProfit = ebit - isrAmt;
+    cash += netProfit + dep;
+
+    months.push({
+      m:i+1, volumen, precio, revenue, cogsAmt, grossProfit,
+      nomina, mkt, renta, admin, dep, opexExDep,
+      ebitda, ebit, isrAmt, netProfit, cash
+    });
+  }
+  return months;
+}
+
+function renderKPIs(months){
+  const totalRev = months.reduce((s,m)=>s+m.revenue,0);
+  const totalEbitda = months.reduce((s,m)=>s+m.ebitda,0);
+  const totalNet = months.reduce((s,m)=>s+m.netProfit,0);
+  const marginEbitda = totalRev ? (totalEbitda/totalRev*100) : 0;
+  let breakEven = months.find(m=>m.ebit>0);
+  const endCash = months[months.length-1].cash;
+
+  const kpis = [
+    {label:'Ingresos año 1', value:fmt(totalRev), cls:''},
+    {label:'EBITDA año 1', value:fmt(totalEbitda), cls: totalEbitda>=0?'pos':'neg'},
+    {label:'Margen EBITDA promedio', value:pct(marginEbitda,1), cls: marginEbitda>=0?'pos':'neg'},
+    {label:'Utilidad neta año 1', value:fmt(totalNet), cls: totalNet>=0?'pos':'neg'},
+    {label:'Primer mes con EBIT positivo', value: breakEven ? 'Mes '+breakEven.m : 'Ninguno en 12 meses', cls: breakEven?'pos':'neg'},
+    {label:'Caja final (mes 12)', value:fmt(endCash), cls: endCash>=0?'pos':'neg'},
+    {label:'Ingresos mes 12', value: fmt(months[11].revenue), cls:''},
+    {label:'Utilidad neta mes 12', value: fmt(months[11].netProfit), cls: months[11].netProfit>=0?'pos':'neg'},
+  ];
+  document.getElementById('kpis').innerHTML = kpis.map(k=>
+    `<div class="kpi"><div class="label">${k.label}</div><div class="value ${k.cls}">${k.value}</div></div>`
+  ).join('');
+}
+
+function renderChart(months){
+  const W=1080,H=200,padL=52,padR=10,padT=15,padB=30;
+  const innerW = W-padL-padR, innerH = H-padT-padB;
+  const allVals = months.flatMap(m=>[m.revenue, m.cogsAmt+m.opexExDep+m.dep, m.netProfit]);
+  const maxV = Math.max(...allVals, 1);
+  const minV = Math.min(...allVals, 0);
+  const range = maxV-minV || 1;
+  const x = i => padL + (innerW/(months.length-1))*i;
+  const y = v => padT + innerH - ((v-minV)/range)*innerH;
+
+  function line(vals, color){
+    const pts = vals.map((v,i)=>`${x(i)},${y(v)}`).join(' ');
+    return `<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="2.5"/>` +
+      vals.map((v,i)=>`<circle cx="${x(i)}" cy="${y(v)}" r="2.5" fill="${color}"/>`).join('');
+  }
+
+  const zeroY = y(0);
+  let svg = `<line x1="${padL}" y1="${zeroY}" x2="${W-padR}" y2="${zeroY}" stroke="#C9BFA8" stroke-width="1"/>`;
+  svg += months.map((m,i)=>`<text x="${x(i)}" y="${H-8}" font-size="9" fill="#4A5A6A" text-anchor="middle" font-family="IBM Plex Mono">M${m.m}</text>`).join('');
+  svg += line(months.map(m=>m.revenue), '#B98B3E');
+  svg += line(months.map(m=>m.cogsAmt+m.opexExDep+m.dep), '#A6402F');
+  svg += line(months.map(m=>m.netProfit), '#3E6350');
+  document.getElementById('chart').innerHTML = svg;
+}
+
+function renderTable(months){
+  const rows = [
+    {label:'Volumen (unidades)', key:'volumen', round:true},
+    {label:'Precio unitario', key:'precio', money:true},
+    {label:'Ingresos', key:'revenue', money:true},
+    {label:'Costo de Ventas', key:'cogsAmt', money:true, neg:true},
+    {label:'Utilidad Bruta', key:'grossProfit', money:true, subtotal:true},
+    {label:'Nómina', key:'nomina', money:true, neg:true},
+    {label:'Marketing y Ventas', key:'mkt', money:true, neg:true},
+    {label:'Renta y Servicios', key:'renta', money:true, neg:true},
+    {label:'Administración y Otros', key:'admin', money:true, neg:true},
+    {label:'EBITDA', key:'ebitda', money:true, subtotal:true},
+    {label:'Depreciación y Amortización', key:'dep', money:true, neg:true},
+    {label:'EBIT (Utilidad Operativa)', key:'ebit', money:true, subtotal:true},
+    {label:'ISR', key:'isrAmt', money:true, neg:true},
+    {label:'Utilidad Neta', key:'netProfit', money:true, total:true},
+    {label:'Caja acumulada', key:'cash', money:true, total:true},
+  ];
+  let html = '<thead><tr><th>Concepto</th>' + months.map(m=>`<th>Mes ${m.m}</th>`).join('') + '</tr></thead><tbody>';
+  rows.forEach(r=>{
+    const rowClass = r.total?'total':(r.subtotal?'subtotal':'');
+    html += `<tr class="${rowClass}"><td>${r.label}</td>`;
+    months.forEach(m=>{
+      let v = m[r.key];
+      let display = r.money ? fmt(v) : Math.round(v).toLocaleString('es-MX');
+      let cls = '';
+      if(r.neg) cls='neg';
+      if((r.key==='netProfit'||r.key==='cash'||r.key==='ebitda'||r.key==='ebit') && v<0) cls='neg';
+      if((r.key==='netProfit'||r.key==='cash'||r.key==='ebitda'||r.key==='ebit'||r.key==='grossProfit') && v>=0) cls='pos';
+      html += `<td class="${cls}">${display}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += '</tbody>';
+  document.getElementById('proj').innerHTML = html;
+}
+
+const SECTOR_PRESETS = {
+  saas:       { margin: 30.0, label: 'Software / SaaS' },
+  prof:       { margin: 15.6, label: 'Servicios Profesionales' },
+  manuf:      { margin: 12.0, label: 'Manufactura' },
+  retailGen:  { margin: 10.1, label: 'Retail General' },
+  retailFood: { margin: 5.4,  label: 'Retail Abarrotes / Alimentos' },
+  restaurant: { margin: 12.5, label: 'Restaurantes' },
+  pharma:     { margin: 33.6, label: 'Farmacéutica' },
+};
+
+document.getElementById('benchSector').addEventListener('change', e => {
+  const key = e.target.value;
+  if (key !== 'custom' && SECTOR_PRESETS[key]){
+    document.getElementById('benchMargin').value = SECTOR_PRESETS[key].margin;
+  }
+  recalc();
+});
+document.getElementById('benchMargin').addEventListener('input', recalc);
+document.getElementById('benchTax').addEventListener('input', recalc);
+
+document.getElementById('btnBenchExport').addEventListener('click', () => {
+  const data = {
+    sector: document.getElementById('benchSector').value,
+    margin: parseFloat(document.getElementById('benchMargin').value),
+    tax: parseFloat(document.getElementById('benchTax').value),
+  };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'benchmark_industria.json'; a.click();
+  URL.revokeObjectURL(url);
+});
+document.getElementById('btnBenchImportTrigger').addEventListener('click', () => {
+  document.getElementById('benchFileImport').click();
+});
+document.getElementById('benchFileImport').addEventListener('change', e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = ev => {
+    try{
+      const parsed = JSON.parse(ev.target.result);
+      if (parsed.sector) document.getElementById('benchSector').value = parsed.sector;
+      if (parsed.margin !== undefined) document.getElementById('benchMargin').value = parsed.margin;
+      if (parsed.tax !== undefined) document.getElementById('benchTax').value = parsed.tax;
+      recalc();
+    } catch(err){
+      alert('No se pudo leer el archivo. Verifica que sea un JSON válido exportado desde este mismo modelo.');
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = '';
+});
+
+
+function generateInsights(a, months, scenarioKey){
+  const insights = [];
+  const m1 = months[0], m12 = months[11];
+  const revGrowthPct = m1.revenue > 0 ? (m12.revenue/m1.revenue - 1)*100 : 0;
+
+  insights.push({
+    tone: revGrowthPct >= 0 ? 'pos' : 'warn',
+    text: `Los ingresos ${revGrowthPct>=0?'crecen':'caen'} <b>${Math.abs(revGrowthPct).toFixed(0)}%</b> del mes 1 al mes 12 (de ${fmt(m1.revenue)} a ${fmt(m12.revenue)}) bajo el escenario ${scenarioKey}.`
+  });
+
+  const margin1 = m1.revenue>0 ? (m1.ebitda/m1.revenue*100) : 0;
+  const margin12 = m12.revenue>0 ? (m12.ebitda/m12.revenue*100) : 0;
+  const deltaMargin = margin12 - margin1;
+  if (deltaMargin > 1){
+    insights.push({ tone:'pos', text:`El margen EBITDA <b>mejora de ${margin1.toFixed(1)}% a ${margin12.toFixed(1)}%</b> conforme el negocio escala — apalancamiento operativo positivo: los gastos fijos se diluyen sobre una base de ingresos mayor.` });
+  } else if (deltaMargin < -1){
+    insights.push({ tone:'warn', text:`El margen EBITDA <b>se deteriora de ${margin1.toFixed(1)}% a ${margin12.toFixed(1)}%</b> — la inflación de gastos u otros supuestos están creciendo más rápido que los ingresos.` });
+  } else {
+    insights.push({ tone:'info', text:`El margen EBITDA se mantiene relativamente estable, entre <b>${margin1.toFixed(1)}%</b> y <b>${margin12.toFixed(1)}%</b> a lo largo del año.` });
+  }
+
+  const rubros = [
+    ['Nómina', m12.nomina], ['Marketing y Ventas', m12.mkt],
+    ['Renta y Servicios', m12.renta], ['Administración y Otros', m12.admin],
+  ];
+  rubros.sort((x,y)=>y[1]-x[1]);
+  const [topLabel, topVal] = rubros[0];
+  const topPct = m12.revenue>0 ? (topVal/m12.revenue*100) : 0;
+  insights.push({ tone:'info', text:`<b>${topLabel}</b> es tu rubro de gasto más pesado: representa <b>${topPct.toFixed(1)}%</b> de tus ingresos en el mes 12.` });
+
+  const negCashMonth = months.find(m=>m.cash<0);
+  if (negCashMonth){
+    insights.push({ tone:'warn', text:`⚠ La caja se vuelve <b>negativa en el mes ${negCashMonth.m}</b> bajo estos supuestos — necesitarías financiamiento puente o ajustar el ritmo de gasto antes de ese punto.` });
+  } else {
+    insights.push({ tone:'pos', text:`La caja se mantiene positiva los 12 meses, cerrando en <b>${fmt(m12.cash)}</b> — no se detecta necesidad de financiamiento adicional bajo este escenario.` });
+  }
+
+  const breakEven = months.find(m=>m.ebit>0);
+  if (breakEven){
+    insights.push({ tone:'pos', text:`Se alcanza <b>punto de equilibrio operativo (EBIT positivo) en el mes ${breakEven.m}</b>.` });
+  } else {
+    insights.push({ tone:'warn', text:`No se alcanza punto de equilibrio operativo dentro de los 12 meses proyectados — vale la pena revisar el costo de ventas o los gastos fijos más pesados.` });
+  }
+
+  const benchMargin = parseFloat(document.getElementById('benchMargin').value) || 0;
+  const benchTax = parseFloat(document.getElementById('benchTax').value) || 0;
+  const sectorSel = document.getElementById('benchSector').value;
+  const sectorLabel = sectorSel !== 'custom' && SECTOR_PRESETS[sectorSel] ? SECTOR_PRESETS[sectorSel].label : 'tu benchmark personalizado';
+
+  const totalRevenue = months.reduce((s,m)=>s+m.revenue,0);
+  const totalEbitdaAll = months.reduce((s,m)=>s+m.ebitda,0);
+  const avgMargin = totalRevenue>0 ? (totalEbitdaAll/totalRevenue*100) : 0;
+  const marginGap = avgMargin - benchMargin;
+  insights.push({
+    tone: marginGap >= 0 ? 'pos' : 'warn',
+    text: `Tu margen EBITDA promedio anual (<b>${avgMargin.toFixed(1)}%</b>) está <b>${Math.abs(marginGap).toFixed(1)} puntos ${marginGap>=0?'por arriba':'por debajo'}</b> del benchmark de ${sectorLabel} (${benchMargin.toFixed(1)}%).`
+  });
+
+  const totalEbitPos = months.reduce((s,m)=>s + (m.ebit>0?m.ebit:0), 0);
+  const totalIsr = months.reduce((s,m)=>s+m.isrAmt,0);
+  const effTaxRate = totalEbitPos>0 ? (totalIsr/totalEbitPos*100) : 0;
+  const taxGap = effTaxRate - benchTax;
+  insights.push({
+    tone: taxGap <= 0 ? 'pos' : 'info',
+    text: `Tu tasa efectiva de ISR anual (<b>${effTaxRate.toFixed(1)}%</b>) está <b>${Math.abs(taxGap).toFixed(1)} puntos ${taxGap<=0?'por debajo':'por arriba'}</b> de tu referencia (${benchTax.toFixed(1)}%).`
+  });
+
+
+  const monthsPes = computeMonths(a, 'pesimista');
+  const monthsOpt = computeMonths(a, 'optimista');
+  const ebitdaPes = monthsPes.reduce((s,m)=>s+m.ebitda,0);
+  const ebitdaOpt = monthsOpt.reduce((s,m)=>s+m.ebitda,0);
+  const swing = ebitdaOpt - ebitdaPes;
+  insights.push({ tone:'info', text:`La diferencia en EBITDA anual entre el escenario <b>Pesimista</b> y el <b>Optimista</b> es de <b>${fmt(swing)}</b> — así de sensible es tu modelo a variaciones de volumen, precio y costo de ventas. Vale la pena estresar estos supuestos antes de comprometerte con ellos.` });
+
+  return insights;
+}
+
+
+function recalc(){
+  const a = readInputs();
+  updateLabels(a);
+  const months = computeMonths(a, scenario);
+  renderKPIs(months);
+  renderChart(months);
+  renderTable(months);
+  document.getElementById('scenarioNote').textContent = SCENARIOS[scenario].label;
+
+  const insights = generateInsights(a, months, scenario);
+  document.getElementById('insights').innerHTML = insights.map(ins =>
+    `<div class="insight ${ins.tone}">${ins.text}</div>`
+  ).join('');
+}
+
+ids.forEach(id=>{
+  document.getElementById(id).addEventListener('input', recalc);
+});
+
+document.querySelectorAll('.scenario-btn').forEach(btn=>{
+  btn.addEventListener('click', ()=>{
+    document.querySelectorAll('.scenario-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    scenario = btn.dataset.scenario;
+    recalc();
+  });
+});
+
+function resetDefaults(){
+  ids.forEach(id=>{ document.getElementById(id).value = defaults[id]; });
+  scenario = 'base';
+  document.querySelectorAll('.scenario-btn').forEach(b=>b.classList.remove('active'));
+  document.querySelector('.scenario-btn.base').classList.add('active');
+  recalc();
+}
+
+recalc();
+</script>
+
+<script>
+function __erp_findLabel(el){
+  if (el.id) {
+    const lbl = document.querySelector(`label[for="${el.id}"]`);
+    if (lbl && lbl.textContent.trim()) return lbl.textContent.trim();
+  }
+  let node = el.closest('div, li, tr, section') || el.parentElement;
+  if (node) {
+    const clone = node.cloneNode(true);
+    clone.querySelectorAll('input, select, script, button').forEach(n => n.remove());
+    const txt = clone.textContent.replace(/\s+/g,' ').trim();
+    if (txt) return txt.slice(0, 90);
+  }
+  return el.id || el.name || 'Campo';
+}
+function __erp_collectSliders(){
+  return Array.from(document.querySelectorAll('input[type=range], input[type=number], input[type=text]')).map(el => ({
+    Campo: __erp_findLabel(el), Valor: el.value
+  })).filter(r => r.Valor !== '');
+}
+function __erp_collectKPIs(){
+  const nodes = Array.from(document.querySelectorAll('[class*="val" i], [class*="result" i], [class*="kpi" i], [class*="verdict" i], [class*="pan-value" i]'));
+  const out = []; const seenTxt = new Set();
+  nodes.forEach(el => {
+    if (el.querySelector('input, select, table')) return;
+    const txt = el.textContent.replace(/\s+/g,' ').trim();
+    if (!txt || txt.length > 70) return;
+    if (seenTxt.has(txt)) return;
+    seenTxt.add(txt);
+    out.push({ Etiqueta: __erp_findLabel(el), Valor: txt });
+  });
+  return out;
+}
+function __erp_collectTables(){
+  return Array.from(document.querySelectorAll('table')).map((t,i) => ({
+    name: 'Tabla' + (i+1),
+    rows: Array.from(t.rows).map(r => Array.from(r.cells).map(c => c.textContent.trim()))
+  })).filter(t => t.rows.length);
+}
+function __erp_exportToExcel(){
+  const wb = XLSX.utils.book_new();
+  const sliders = __erp_collectSliders();
+  if (sliders.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sliders), 'Controles');
+  const kpis = __erp_collectKPIs();
+  if (kpis.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(kpis), 'Resultados');
+  __erp_collectTables().forEach(t => {
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(t.rows), t.name.slice(0,31));
+  });
+  if (!wb.SheetNames.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['No se detectaron datos exportables autom\u00e1ticamente']]), 'Info');
+  const fname = (document.title || 'modelo').replace(/[^a-z0-9]+/gi,'_').toLowerCase().slice(0,60) + '.xlsx';
+  XLSX.writeFile(wb, fname);
+}
+function __erp_shareWhatsApp(){
+  const kpis = __erp_collectKPIs().slice(0, 6);
+  const texto = `${document.title}\n` + kpis.map(k => `${k.Etiqueta}: ${k.Valor}`).join('\n');
+  if (navigator.share) { navigator.share({ title: document.title, text: texto }).catch(()=>{}); }
+  else { window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank'); }
+}
+</script>
+</body>
+</html>

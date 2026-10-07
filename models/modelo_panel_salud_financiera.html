@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Panel de Salud Financiera — 24 Razones</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+.export-toolbar{position:fixed;top:16px;right:16px;display:flex;gap:8px;z-index:999;}
+.export-toolbar button{width:42px;height:42px;border-radius:50%;border:1px solid var(--line);background:var(--paper-2);color:var(--ink);font-size:17px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);}
+.export-toolbar button:hover{border-color:var(--brass);}
+@media print{
+  .export-toolbar, .upload-section{display:none !important;}
+  body{background:#fff;color:#111;}
+}
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap');
+
+:root{
+  --paper:#F1E9D8; --paper-2:#E8DEC7; --ink:#1E2A38; --ink-soft:#4A5A6A;
+  --brass:#B98B3E; --brass-dark:#8C6A2E; --rust:#A6402F; --amber:#C08A2E;
+  --green:#3E6350; --line:#C9BFA8; --shadow:rgba(30,42,56,0.18);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;}
+body{background:var(--paper);color:var(--ink);font-family:'Inter',sans-serif;padding:30px 18px 60px;}
+.wrap{max-width:1080px;margin:0 auto;}
+
+.masthead{text-align:center;padding-bottom:20px;border-bottom:3px double var(--ink);margin-bottom:24px;}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass-dark);margin-bottom:8px;}
+h1{font-family:'Fraunces',serif;font-weight:700;font-size:clamp(24px,4vw,40px);margin:0 0 8px;letter-spacing:-0.01em;}
+.sub{font-size:13.5px;color:var(--ink-soft);max-width:640px;margin:0 auto;line-height:1.5;}
+
+/* Upload / extraction section */
+.upload-section{background:var(--paper-2);border:1px solid var(--line);border-radius:4px;padding:20px 22px;margin-bottom:28px;}
+.upload-head{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin-bottom:12px;flex-wrap:wrap;}
+.upload-head h2{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:0;}
+.upload-head .hint{font-size:11.5px;color:var(--ink-soft);font-family:'IBM Plex Mono',monospace;}
+
+.drop-zone{
+  border:2px dashed var(--line);border-radius:4px;padding:26px 18px;text-align:center;
+  cursor:pointer;background:var(--paper);transition:border-color .15s, background .15s;
+}
+.drop-zone.dragover{border-color:var(--brass);background:rgba(185,139,62,.08);}
+.drop-zone .dz-title{font-size:13.5px;font-weight:600;margin-bottom:4px;}
+.drop-zone .dz-sub{font-size:11.5px;color:var(--ink-soft);}
+.drop-zone .dz-file{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--brass-dark);margin-top:8px;}
+
+.extract-status{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--ink-soft);margin-top:10px;min-height:16px;}
+.extract-status.error{color:var(--rust);}
+.extract-status.ok{color:var(--green);}
+
+.review-wrap{margin-top:16px;}
+.review-table{width:100%;border-collapse:collapse;font-size:12.5px;}
+.review-table th{
+  text-align:left;font-family:'IBM Plex Mono',monospace;font-size:10.5px;text-transform:uppercase;
+  letter-spacing:.04em;color:var(--ink-soft);border-bottom:2px solid var(--ink);padding:6px 8px;
+}
+.review-table td{border-bottom:1px solid var(--line);padding:7px 8px;vertical-align:middle;}
+.review-table tr.not-found td{color:var(--ink-soft);}
+.review-table .field-name{font-weight:600;}
+.review-table .snippet{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);max-width:260px;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.review-table input[type=number]{
+  width:110px;font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:4px 6px;
+  border:1px solid var(--line);border-radius:3px;background:#fff;
+}
+.review-table select{font-family:'IBM Plex Mono',monospace;font-size:11.5px;padding:3px 4px;border:1px solid var(--line);border-radius:3px;background:#fff;}
+.review-table input[type=checkbox]{width:15px;height:15px;}
+.review-actions{display:flex;justify-content:space-between;align-items:center;margin-top:14px;gap:10px;flex-wrap:wrap;}
+.btn-apply{
+  font-family:'IBM Plex Mono',monospace;font-size:12.5px;font-weight:600;letter-spacing:.03em;
+  background:var(--ink);color:var(--paper);border:none;border-radius:3px;padding:10px 20px;cursor:pointer;
+}
+.btn-apply:hover{background:var(--brass-dark);}
+.applied-msg{font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--green);}
+
+/* Overall diagnosis */
+.diag{display:flex;justify-content:center;gap:14px;flex-wrap:wrap;margin:20px 0 28px;}
+.diag-pill{
+  font-family:'IBM Plex Mono',monospace;font-size:12.5px;padding:8px 16px;border-radius:20px;
+  display:flex;align-items:center;gap:8px;border:1px solid var(--line);background:var(--paper-2);
+}
+.diag-pill .dot{width:9px;height:9px;border-radius:50%;}
+.diag-pill.ok .dot{background:var(--green);} .diag-pill.warn .dot{background:var(--amber);} .diag-pill.bad .dot{background:var(--rust);}
+.diag-count{font-weight:700;}
+
+/* Tabs */
+.tabs{display:flex;gap:6px;margin-bottom:16px;border-bottom:2px solid var(--ink);flex-wrap:wrap;}
+.tab-btn{
+  font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.03em;background:none;border:none;
+  padding:10px 16px;cursor:pointer;color:var(--ink-soft);border-bottom:3px solid transparent;margin-bottom:-2px;
+}
+.tab-btn.active{color:var(--ink);border-bottom-color:var(--brass);font-weight:700;}
+.tab-panel{display:none;}
+.tab-panel.active{display:grid;grid-template-columns:1fr 1fr;gap:18px 26px;margin-bottom:30px;}
+@media (max-width:720px){ .tab-panel.active{grid-template-columns:1fr;} }
+#tab-credito.active{display:block;}
+
+/* Credit line estimator */
+.credito-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 26px;margin-bottom:22px;}
+@media (max-width:720px){ .credito-grid{grid-template-columns:1fr;} }
+.credito-methods{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:18px;}
+@media (max-width:820px){ .credito-methods{grid-template-columns:1fr;} }
+.credito-method-card{background:var(--paper-2);border:1px solid var(--line);border-radius:4px;padding:16px 18px;}
+.credito-method-card h3{font-family:'Fraunces',serif;font-size:14.5px;margin:0 0 6px;font-weight:600;}
+.credito-method-card .m-formula{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);display:block;margin-bottom:10px;line-height:1.5;}
+.credito-method-card .m-value{font-family:'IBM Plex Mono',monospace;font-size:19px;font-weight:700;color:var(--brass-dark);}
+.credito-recommend{background:var(--ink);color:var(--paper);border-radius:4px;padding:22px 24px;text-align:center;margin-bottom:18px;}
+.credito-recommend .r-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--brass);margin-bottom:6px;}
+.credito-recommend .r-value{font-family:'Fraunces',serif;font-size:32px;font-weight:700;}
+.credito-recommend .r-note{font-size:12px;color:#C9BFA8;margin-top:8px;max-width:520px;margin-left:auto;margin-right:auto;line-height:1.5;}
+.covenant-alert{background:rgba(166,64,47,.08);border-left:3px solid var(--rust);padding:10px 14px;border-radius:0 3px 3px 0;font-size:12.5px;}
+.covenant-alert.none{background:rgba(62,99,80,.08);border-left-color:var(--green);}
+.covenant-list{font-family:'IBM Plex Mono',monospace;font-size:11.5px;margin-top:6px;color:var(--ink-soft);}
+
+.control{background:var(--paper-2);border:1px solid var(--line);border-radius:4px;padding:14px 16px;}
+.control-top{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:6px;gap:10px;}
+.control-name{font-size:13px;font-weight:500;}
+.control-name small{display:block;font-size:10.5px;color:var(--ink-soft);font-weight:400;margin-top:1px;font-family:'IBM Plex Mono',monospace;}
+.control-val{font-family:'IBM Plex Mono',monospace;font-size:13px;font-weight:600;color:var(--brass-dark);white-space:nowrap;}
+input[type="range"]{-webkit-appearance:none;width:100%;height:4px;border-radius:2px;background:var(--line);outline:none;margin-top:2px;}
+input[type="range"]::-webkit-slider-thumb{-webkit-appearance:none;width:17px;height:17px;border-radius:50%;background:var(--brass);border:2px solid var(--paper);box-shadow:0 1px 4px var(--shadow);cursor:pointer;}
+input[type="range"]::-moz-range-thumb{width:17px;height:17px;border-radius:50%;background:var(--brass);border:2px solid var(--paper);cursor:pointer;}
+.control.just-updated{outline:2px solid var(--brass);}
+
+/* Module cards */
+.module{background:var(--paper-2);border:1px solid var(--line);border-radius:4px;padding:20px 22px;margin-bottom:20px;}
+.module-head{display:flex;align-items:center;gap:10px;margin-bottom:14px;}
+.module-head .icon{font-size:20px;}
+.module-head h2{font-family:'Fraunces',serif;font-size:17px;font-weight:600;margin:0;}
+.module-head .count{margin-left:auto;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--ink-soft);}
+
+.ratio-row{padding:12px 0;border-bottom:1px solid var(--line);}
+.ratio-row:last-child{border-bottom:none;}
+.ratio-top{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:4px 12px;margin-bottom:6px;}
+.ratio-name{font-size:13.5px;font-weight:600;}
+.ratio-formula{font-family:'IBM Plex Mono',monospace;font-size:10.5px;color:var(--ink-soft);display:block;margin-top:1px;}
+.ratio-value-block{display:flex;align-items:center;gap:8px;}
+.ratio-value{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;}
+.ratio-status{font-family:'IBM Plex Mono',monospace;font-size:10.5px;padding:2px 8px;border-radius:10px;font-weight:600;letter-spacing:.02em;}
+.ratio-status.ok{color:var(--green);background:rgba(62,99,80,.12);}
+.ratio-status.warn{color:var(--amber);background:rgba(192,138,46,.14);}
+.ratio-status.bad{color:var(--rust);background:rgba(166,64,47,.1);}
+.ratio-status.info{color:var(--ink-soft);background:rgba(74,90,106,.1);}
+
+.gauge-track{position:relative;height:8px;border-radius:4px;background:var(--line);margin-bottom:4px;overflow:visible;}
+.gauge-marker{position:absolute;top:-4px;width:2px;height:16px;background:var(--ink);border-radius:1px;transform:translateX(-1px);}
+.gauge-ideal{position:absolute;top:0;height:8px;background:rgba(62,99,80,.35);border-radius:4px;}
+.gauge-range-label{display:flex;justify-content:space-between;font-family:'IBM Plex Mono',monospace;font-size:9.5px;color:var(--ink-soft);margin-bottom:8px;}
+
+.tip{font-size:12px;color:var(--ink-soft);background:rgba(185,139,62,.09);border-left:3px solid var(--brass);padding:6px 10px;margin-top:6px;border-radius:0 3px 3px 0;line-height:1.4;}
+
+.foot-note{text-align:center;font-size:11px;color:var(--ink-soft);margin-top:26px;font-family:'IBM Plex Mono',monospace;line-height:1.6;}
+</style>
+</head>
+<body>
+<div class="export-toolbar">
+  <button onclick="window.print()" title="Imprimir">🖨️</button>
+  <button onclick="exportToExcel()" title="Exportar a Excel">📊</button>
+  <button onclick="window.print()" title="Guardar como PDF (usa el diálogo de impresión)">📄</button>
+  <button onclick="shareWhatsApp()" title="Compartir por WhatsApp">💬</button>
+</div>
+<div class="wrap">
+
+  <div class="masthead">
+    <div class="eyebrow">Diagnóstico financiero · 24 razones</div>
+    <h1>Panel de Salud Financiera</h1>
+    <p class="sub">Ajusta las cifras de tu balance y estado de resultados, o carga un PDF de estados financieros y deja que el panel busque las cifras por ti. Cada indicador se calcula solo y se compara contra su rango de referencia, como una química sanguínea del negocio.</p>
+  </div>
+
+  <div class="upload-section">
+    <div class="upload-head">
+      <h2>Cargar estado financiero (PDF)</h2>
+      <span class="hint">Sólo PDFs con texto seleccionable — no escaneados</span>
+    </div>
+    <div class="drop-zone" id="dropZone">
+      <div class="dz-title">Arrastra un PDF aquí o haz clic para seleccionarlo</div>
+      <div class="dz-sub">Buscamos etiquetas contables conocidas (Activo Circulante, Ingresos, EBITDA, etc.) línea por línea</div>
+      <div class="dz-file" id="dzFile"></div>
+      <input type="file" id="pdfInput" accept="application/pdf" style="display:none">
+    </div>
+    <div class="extract-status" id="extractStatus"></div>
+    <div class="review-wrap" id="reviewWrap" style="display:none;">
+      <table class="review-table">
+        <thead>
+          <tr>
+            <th style="width:22px;"></th>
+            <th>Cuenta del panel</th>
+            <th>Línea detectada en el PDF</th>
+            <th>Valor</th>
+            <th>Unidad</th>
+          </tr>
+        </thead>
+        <tbody id="reviewBody"></tbody>
+      </table>
+      <div class="review-actions">
+        <span class="hint">Revisa y corrige antes de aplicar — la extracción es un punto de partida, no un hecho.</span>
+        <button class="btn-apply" id="applyBtn">Aplicar al panel</button>
+      </div>
+      <div class="applied-msg" id="appliedMsg"></div>
+    </div>
+  </div>
+
+  <div class="diag" id="diag"></div>
+
+  <div class="tabs" id="tabs">
+    <button class="tab-btn active" data-tab="balance">01 · Balance General</button>
+    <button class="tab-btn" data-tab="resultados">02 · Estado de Resultados</button>
+    <button class="tab-btn" data-tab="actividad">03 · Ciclo y Actividad</button>
+    <button class="tab-btn" data-tab="credito">04 · Línea de Crédito</button>
+  </div>
+
+  <div class="tab-panel active" id="tab-balance"></div>
+  <div class="tab-panel" id="tab-resultados"></div>
+  <div class="tab-panel" id="tab-actividad"></div>
+  <div class="tab-panel" id="tab-credito"></div>
+
+  <div id="modules"></div>
+
+  <p class="foot-note">Rangos de referencia estándar (varían por sector) · Verde = dentro de rango · Ámbar = zona de alerta · Rojo = fuera de rango<br>La extracción de PDF usa reconocimiento de palabras clave, no lectura contable — confírmala siempre contra el documento original.</p>
+</div>
+
+<script>
+/* ---------------- inputs (base financial statement figures) ---------------- */
+const INPUTS = {
+  balance: [
+    { id:'activoCirculante', name:'Activo Circulante', v:3500000, max:15000000, step:10000 },
+    { id:'inventarios', name:'Inventarios', v:900000, max:6000000, step:10000 },
+    { id:'efectivo', name:'Efectivo y Equivalentes', v:600000, max:5000000, step:10000 },
+    { id:'activoTotal', name:'Activo Total', v:9000000, max:40000000, step:50000 },
+    { id:'pasivoCirculante', name:'Pasivo Circulante', v:2000000, max:12000000, step:10000 },
+    { id:'pasivoTotal', name:'Pasivo Total', v:4000000, max:25000000, step:10000 },
+    { id:'capitalContable', name:'Capital Contable', v:5000000, max:25000000, step:10000 },
+  ],
+  resultados: [
+    { id:'ventasTotales', name:'Ventas Totales', v:12000000, max:50000000, step:50000 },
+    { id:'costoVentas', name:'Costo de Ventas', v:7500000, max:35000000, step:50000 },
+    { id:'utilidadBruta', name:'Utilidad Bruta', v:4500000, max:25000000, step:50000 },
+    { id:'ebit', name:'Utilidad Operativa (EBIT)', v:1900000, max:15000000, step:20000 },
+    { id:'gastosFinancieros', name:'Gastos Financieros', v:300000, max:3000000, step:5000 },
+    { id:'utilidadNeta', name:'Utilidad Neta', v:1300000, max:10000000, step:20000 },
+    { id:'ebitda', name:'EBITDA', v:2200000, max:15000000, step:20000 },
+    { id:'flujoCajaOperativo', name:'Flujo de Caja Operativo', v:1700000, max:12000000, step:20000 },
+  ],
+  actividad: [
+    { id:'inventarioProm', name:'Inventario Promedio', v:850000, max:6000000, step:10000 },
+    { id:'cxcProm', name:'Cuentas por Cobrar (promedio)', v:1200000, max:8000000, step:10000 },
+    { id:'cxpProm', name:'Cuentas por Pagar (promedio)', v:1000000, max:8000000, step:10000 },
+    { id:'ventasCredito', name:'Ventas a Crédito', v:9000000, max:40000000, step:50000 },
+    { id:'comprasCredito', name:'Compras a Crédito', v:6500000, max:30000000, step:50000 },
+  ]
+};
+
+const state = {};
+Object.values(INPUTS).flat().forEach(f => state[f.id] = f.v);
+
+const fmt$ = n => '$' + Math.round(n).toLocaleString('en-US');
+const fmtPct = (n,d=1) => (n*100).toFixed(d) + '%';
+const fmtX = (n,d=2) => n.toFixed(d) + 'x';
+const fmtDays = n => Math.round(n) + ' días';
+
+/* ---------------- build input tabs ---------------- */
+function buildInputs(){
+  Object.entries(INPUTS).forEach(([tab, fields]) => {
+    const panel = document.getElementById('tab-' + tab);
+    panel.innerHTML = fields.map(f => `
+      <div class="control" id="ctrl-${f.id}">
+        <div class="control-top">
+          <span class="control-name">${f.name}</span>
+          <span class="control-val" id="val-${f.id}">${fmt$(f.v)}</span>
+        </div>
+        <input type="range" id="in-${f.id}" min="0" max="${f.max}" step="${f.step}" value="${f.v}">
+      </div>
+    `).join('');
+    fields.forEach(f => {
+      document.getElementById('in-' + f.id).addEventListener('input', e => {
+        state[f.id] = parseFloat(e.target.value);
+        document.getElementById('val-' + f.id).textContent = fmt$(state[f.id]);
+        renderAll();
+      });
+    });
+  });
+}
+
+document.getElementById('tabs').addEventListener('click', e => {
+  const btn = e.target.closest('.tab-btn');
+  if (!btn) return;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tab-' + btn.dataset.tab).classList.add('active');
+});
+
+/* ---------------- PDF upload + keyword extraction ---------------- */
+if (window['pdfjsLib']) {
+  pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/3.11.174/pdf.worker.min.js';
+}
+
+// field key -> { label, patterns (regex, normalized text) }
+const FIELD_DICTIONARY = {
+  activoCirculante:   { label:'Activo Circulante',            tab:'balance',    patterns:[/^activo circulante\b/] },
+  efectivo:           { label:'Efectivo y Equivalentes',      tab:'balance',    patterns:[/^efectivo y equivalentes/, /^efectivo e inversiones/, /^efectivo, bancos/, /^efectivo\b/] },
+  activoTotal:        { label:'Activo Total',                 tab:'balance',    patterns:[/^activo total\b/] },
+  pasivoCirculante:   { label:'Pasivo Circulante',            tab:'balance',    patterns:[/^pasivo circulante\b/, /^pasivos circulante\b/] },
+  pasivoTotal:        { label:'Pasivo Total',                 tab:'balance',    patterns:[/^pasivo total\b/] },
+  capitalContable:    { label:'Capital Contable',             tab:'balance',    patterns:[/^capital contable\b/] },
+  ventasTotales:      { label:'Ventas / Ingresos Totales',    tab:'resultados', patterns:[/^ingresos totales\b/, /^ventas totales\b/, /^ventas netas\b/, /^ingresos\b/] },
+  costoVentas:        { label:'Costo de Ventas',              tab:'resultados', patterns:[/^costo de ventas\b/, /^costo de ingresos\b/] },
+  utilidadBruta:      { label:'Utilidad Bruta',                tab:'resultados', patterns:[/^utilidad bruta\b/] },
+  ebit:                { label:'Utilidad Operativa (EBIT)',    tab:'resultados', patterns:[/^utilidad de operacion\b/, /^utilidad operativa\b/, /^resultado de operacion\b/, /^ebit\b/] },
+  gastosFinancieros:  { label:'Gastos Financieros',            tab:'resultados', patterns:[/^gastos financieros\b/, /^resultado integral de financiamiento\b/] },
+  utilidadNeta:        { label:'Utilidad Neta',                 tab:'resultados', patterns:[/^utilidad neta\b/] },
+  ebitda:              { label:'EBITDA',                        tab:'resultados', patterns:[/^ebitda\b/] },
+  flujoCajaOperativo: { label:'Flujo de Caja Operativo',       tab:'resultados', patterns:[/^flujos netos de efectivo de actividades de operacion\b/, /^flujo neto de efectivo de operacion\b/, /^flujo de caja operativo\b/] },
+  inventarioProm:      { label:'Inventario Promedio',           tab:'actividad',  patterns:[/^inventario promedio\b/, /^inventarios\b/] },
+  cxcProm:             { label:'Cuentas por Cobrar (prom.)',    tab:'actividad',  patterns:[/^cuentas por cobrar promedio\b/, /^clientes y otras cuentas por cobrar\b/] },
+  cxpProm:             { label:'Cuentas por Pagar (prom.)',     tab:'actividad',  patterns:[/^cuentas por pagar promedio\b/, /^proveedores y otras cuentas por pagar\b/] },
+  ventasCredito:       { label:'Ventas a Crédito',              tab:'actividad',  patterns:[/^ventas a credito\b/] },
+  comprasCredito:      { label:'Compras a Crédito',             tab:'actividad',  patterns:[/^compras a credito\b/] },
+};
+const FIELD_ORDER = Object.keys(FIELD_DICTIONARY);
+const UNIT_MULT = { pesos:1, miles:1000, millones:1000000 };
+
+function normalizeText(s){
+  return s.normalize('NFD').replace(/[\u0300-\u036f]/g,'').toLowerCase().replace(/\s+/g,' ').trim();
+}
+
+function extractNumbers(line){
+  const cleaned = line.replace(/-\s+(\d)/g, '-$1');
+  const found = cleaned.match(/-?\(?\d{1,3}(,\d{3})*(\.\d+)?\)?%?/g) || [];
+  return found
+    .filter(m => !m.endsWith('%'))
+    .map(m => {
+      let neg = false, clean = m;
+      if (clean.startsWith('(') && clean.endsWith(')')) { neg = true; clean = clean.slice(1, -1); }
+      if (clean.startsWith('-')) { neg = true; clean = clean.slice(1); }
+      const num = parseFloat(clean.replace(/,/g, ''));
+      return neg ? -num : num;
+    })
+    .filter(n => !isNaN(n));
+}
+
+async function extractFromPDF(file, onProgress){
+  const buf = await file.arrayBuffer();
+  const pdf = await pdfjsLib.getDocument({ data: buf, verbosity: 0 }).promise;
+  const matches = {};
+  const maxPages = Math.min(pdf.numPages, 60);
+
+  for (let p = 1; p <= maxPages; p++){
+    onProgress(p, maxPages);
+    const page = await pdf.getPage(p);
+    const content = await page.getTextContent();
+    if (!content.items.length) continue;
+
+    const items = content.items.map(it => ({ str: it.str, x: it.transform[4], y: it.transform[5] }));
+    items.sort((a, b) => (b.y - a.y) || (a.x - b.x));
+
+    const lines = [];
+    let current = [];
+    let lastY = null;
+    items.forEach(it => {
+      if (lastY === null || Math.abs(it.y - lastY) < 2.5) {
+        current.push(it);
+      } else {
+        lines.push(current);
+        current = [it];
+      }
+      lastY = it.y;
+    });
+    if (current.length) lines.push(current);
+
+    const lineTexts = lines.map(l => l.map(i => i.str).join(' ').replace(/\s+/g, ' ').trim()).filter(Boolean);
+    const pageText = lineTexts.join('\n');
+    const unitGuess = /millones de pesos/i.test(pageText) ? 'millones'
+      : /miles de pesos/i.test(pageText) ? 'miles' : 'pesos';
+
+    lineTexts.forEach(line => {
+      const norm = normalizeText(line);
+      FIELD_ORDER.forEach(key => {
+        if (matches[key]) return;
+        const def = FIELD_DICTIONARY[key];
+        if (def.patterns.some(rx => rx.test(norm))) {
+          const numbers = extractNumbers(line);
+          if (numbers.length) {
+            matches[key] = { label: def.label, tab: def.tab, snippet: line.slice(0, 90), value: numbers[0], unit: unitGuess, page: p };
+          }
+        }
+      });
+    });
+  }
+  return matches;
+}
+
+function renderReviewTable(matches){
+  const tbody = document.getElementById('reviewBody');
+  tbody.innerHTML = FIELD_ORDER.map(key => {
+    const m = matches[key];
+    const found = !!m;
+    return `
+      <tr class="${found ? '' : 'not-found'}" data-key="${key}">
+        <td><input type="checkbox" ${found ? 'checked' : ''} data-role="include" ${found ? '' : 'disabled'}></td>
+        <td><span class="field-name">${FIELD_DICTIONARY[key].label}</span></td>
+        <td>${found ? `<span class="snippet" title="${m.snippet.replace(/"/g,'&quot;')}">p.${m.page} · ${m.snippet}</span>` : 'No encontrado — captúralo manualmente si aplica'}</td>
+        <td><input type="number" data-role="value" value="${found ? m.value : ''}" ${found ? '' : 'placeholder="—"'}></td>
+        <td>
+          <select data-role="unit" ${found ? '' : 'disabled'}>
+            <option value="pesos" ${found && m.unit === 'pesos' ? 'selected' : ''}>Pesos</option>
+            <option value="miles" ${found && m.unit === 'miles' ? 'selected' : ''}>Miles</option>
+            <option value="millones" ${found && m.unit === 'millones' ? 'selected' : ''}>Millones</option>
+          </select>
+        </td>
+      </tr>`;
+  }).join('');
+  document.getElementById('reviewWrap').style.display = 'block';
+  document.getElementById('appliedMsg').textContent = '';
+}
+
+function setFieldValue(id, value){
+  state[id] = value;
+  const input = document.getElementById('in-' + id);
+  if (!input) return;
+  if (value > Number(input.max)) input.max = Math.ceil(value * 1.5);
+  if (value < Number(input.min || 0)) input.min = Math.floor(value * 1.5);
+  input.value = value;
+  document.getElementById('val-' + id).textContent = fmt$(value);
+  const ctrl = document.getElementById('ctrl-' + id);
+  if (ctrl){
+    ctrl.classList.add('just-updated');
+    setTimeout(() => ctrl.classList.remove('just-updated'), 1600);
+  }
+}
+
+document.getElementById('applyBtn').addEventListener('click', () => {
+  const rows = document.querySelectorAll('#reviewBody tr');
+  let applied = 0, tabsTouched = new Set();
+  rows.forEach(row => {
+    const key = row.dataset.key;
+    const include = row.querySelector('[data-role="include"]');
+    const valueInput = row.querySelector('[data-role="value"]');
+    const unitSelect = row.querySelector('[data-role="unit"]');
+    if (!include.checked) return;
+    const raw = parseFloat(valueInput.value);
+    if (isNaN(raw)) return;
+    const mult = UNIT_MULT[unitSelect.value] || 1;
+    setFieldValue(key, raw * mult);
+    tabsTouched.add(FIELD_DICTIONARY[key].tab);
+    applied++;
+  });
+  renderAll();
+  const msg = document.getElementById('appliedMsg');
+  msg.textContent = applied > 0
+    ? `Se aplicaron ${applied} campo(s) al panel. Revisa las pestañas: ${[...tabsTouched].join(', ')}.`
+    : 'No se marcó ningún campo para aplicar.';
+});
+
+function setExtractStatus(text, kind){
+  const el = document.getElementById('extractStatus');
+  el.textContent = text;
+  el.className = 'extract-status' + (kind ? ' ' + kind : '');
+}
+
+async function handlePdfFile(file){
+  if (!file) return;
+  if (file.type !== 'application/pdf' && !file.name.toLowerCase().endsWith('.pdf')) {
+    setExtractStatus('Ese archivo no parece ser un PDF.', 'error');
+    return;
+  }
+  document.getElementById('dzFile').textContent = file.name;
+  document.getElementById('reviewWrap').style.display = 'none';
+  if (!window['pdfjsLib']) {
+    setExtractStatus('No se pudo cargar el lector de PDF. Intenta recargar la página.', 'error');
+    return;
+  }
+  try {
+    setExtractStatus('Analizando página 1…');
+    const matches = await extractFromPDF(file, (p, total) => setExtractStatus(`Analizando página ${p} de ${total}…`));
+    const foundCount = Object.keys(matches).length;
+    if (foundCount === 0) {
+      setExtractStatus('No se detectaron etiquetas conocidas. Si el PDF es escaneado, esta herramienta no puede leerlo — revisa el documento manualmente.', 'error');
+      return;
+    }
+    setExtractStatus(`Se detectaron ${foundCount} de ${FIELD_ORDER.length} cuentas. Revisa los valores y unidades antes de aplicar.`, 'ok');
+    renderReviewTable(matches);
+  } catch (err) {
+    console.error(err);
+    setExtractStatus('Ocurrió un error leyendo el PDF: ' + err.message, 'error');
+  }
+}
+
+const dropZone = document.getElementById('dropZone');
+const pdfInput = document.getElementById('pdfInput');
+dropZone.addEventListener('click', () => pdfInput.click());
+pdfInput.addEventListener('change', e => handlePdfFile(e.target.files[0]));
+['dragenter','dragover'].forEach(evt => dropZone.addEventListener(evt, e => {
+  e.preventDefault(); dropZone.classList.add('dragover');
+}));
+['dragleave','drop'].forEach(evt => dropZone.addEventListener(evt, e => {
+  e.preventDefault(); dropZone.classList.remove('dragover');
+}));
+dropZone.addEventListener('drop', e => handlePdfFile(e.dataTransfer.files[0]));
+
+/* ---------------- ratio definitions ---------------- */
+// type: 'range' (min-max ideal) | 'min' (higher better) | 'max' (lower better) | 'min0' (must be >0) | 'info' (no fixed grade)
+function ratios(){
+  const s = state;
+  const capitalTrabajo = s.activoCirculante - s.pasivoCirculante;
+  const rotInv = s.inventarioProm > 0 ? s.costoVentas / s.inventarioProm : 0;
+  const rotCxc = s.cxcProm > 0 ? s.ventasCredito / s.cxcProm : 0;
+  const rotCxp = s.cxpProm > 0 ? s.comprasCredito / s.cxpProm : 0;
+  const periodoCobro = rotCxc > 0 ? 365 / rotCxc : 0;
+  const periodoPago = rotCxp > 0 ? 365 / rotCxp : 0;
+
+  return {
+    liquidez: {
+      icon:'💧', title:'Módulo 1 · Liquidez', items:[
+        { name:'Razón Corriente', formula:'Activo Circulante / Pasivo Circulante', value:s.activoCirculante/(s.pasivoCirculante||1), unit:'x', type:'range', min:1.5, max:2.0,
+          tipLow:'Aumenta activos circulantes (cobra cartera) o difiere pasivos de corto plazo a largo plazo.', tipHigh:'Hay activos circulantes ociosos; evalúa invertir el excedente.' },
+        { name:'Prueba Ácida', formula:'(Activo Circulante - Inventarios) / Pasivo Circulante', value:(s.activoCirculante-s.inventarios)/(s.pasivoCirculante||1), unit:'x', type:'range', min:1.0, max:1.2,
+          tipLow:'Depende demasiado del inventario para pagar; mejora cobranza o efectivo disponible.', tipHigh:'Exceso de liquidez inmediata; revisa si el efectivo o la cartera están ociosos.' },
+        { name:'Prueba del Absoluto', formula:'Efectivo y Equivalentes / Pasivo Circulante', value:s.efectivo/(s.pasivoCirculante||1), unit:'x', type:'range', min:0.2, max:0.3,
+          tipLow:'Poco efectivo inmediato para emergencias; aumenta caja/bancos.', tipHigh:'Demasiado efectivo parado sin generar rendimiento.' },
+        { name:'Capital de Trabajo Neto', formula:'Activo Circulante - Pasivo Circulante', value:capitalTrabajo, unit:'$', type:'min0',
+          tipLow:'Los pasivos de corto plazo superan a los activos circulantes: riesgo de insolvencia inmediata.' },
+        { name:'Razón de Fondo de Maniobra', formula:'Capital de Trabajo / Activo Total', value:capitalTrabajo/(s.activoTotal||1), unit:'%', type:'range', min:0.1, max:0.2,
+          tipLow:'El capital de trabajo es bajo respecto al activo total.', tipHigh:'Proporción de capital de trabajo más alta de lo típico; revisa si conviene invertir el excedente.' },
+        { name:'Cobertura de Efectivo Operativa', formula:'EBITDA / Pasivo Circulante', value:s.ebitda/(s.pasivoCirculante||1), unit:'x', type:'min', min:1.0,
+          tipLow:'El EBITDA no cubre los pasivos de corto plazo; mejora la generación operativa de efectivo.' },
+      ]
+    },
+    endeudamiento: {
+      icon:'🩻', title:'Módulo 2 · Endeudamiento y Solvencia', items:[
+        { name:'Endeudamiento Total', formula:'Pasivo Total / Activo Total', value:s.pasivoTotal/(s.activoTotal||1), unit:'%', type:'range', min:0.4, max:0.6,
+          tipLow:'Bajo apalancamiento; podrías usar deuda para crecer si el costo financiero es favorable.', tipHigh:'Terceros son casi más dueños de la empresa que tú; prioriza reducir deuda.' },
+        { name:'Apalancamiento Financiero', formula:'Pasivo Total / Capital Contable', value:s.pasivoTotal/(s.capitalContable||1), unit:'x', type:'max', max:1.0,
+          tipHigh:'La deuda supera al capital propio; reduce pasivos o incrementa el capital contable.' },
+        { name:'Cobertura de Intereses', formula:'EBIT / Gastos Financieros', value:s.ebit/(s.gastosFinancieros||1), unit:'x', type:'min', min:3.0,
+          tipLow:'La utilidad operativa apenas cubre los intereses; riesgo si sube la tasa o bajan las ventas.' },
+        { name:'Calidad de la Deuda', formula:'Pasivo Circulante / Pasivo Total', value:s.pasivoCirculante/(s.pasivoTotal||1), unit:'%', type:'max', max:0.5,
+          tipHigh:'Gran parte de la deuda vence pronto; negocia plazos más largos.' },
+        { name:'Autonomía Financiera', formula:'Capital Contable / Activo Total', value:s.capitalContable/(s.activoTotal||1), unit:'%', type:'range', min:0.4, max:0.6,
+          tipLow:'Poca independencia financiera; fortalece el capital contable.', tipHigh:'Podrías aprovechar más financiamiento externo para crecer.' },
+        { name:'Cobertura de Deuda Total', formula:'Flujo de Caja Operativo / Pasivo Total', value:s.flujoCajaOperativo/(s.pasivoTotal||1), unit:'%', type:'min', min:0.25,
+          tipLow:'El flujo operativo no alcanza para respaldar el pasivo total.' },
+      ]
+    },
+    actividad: {
+      icon:'🔄', title:'Módulo 3 · Actividad y Eficiencia', items:[
+        { name:'Rotación de Inventarios', formula:'Costo de Ventas / Inventario Promedio', value:rotInv, unit:'x', type:'info', tipInfo:'Entre más alta, mejor. Si es baja, revisa exceso de inventario o baja demanda.' },
+        { name:'Días de Inventario', formula:'365 / Rotación de Inventarios', value:rotInv>0?365/rotInv:0, unit:'días', type:'max', max:45,
+          tipHigh:'El inventario tarda mucho en venderse; ajusta compras o promueve rotación.' },
+        { name:'Rotación de Cuentas por Cobrar', formula:'Ventas a Crédito / Cuentas por Cobrar Promedio', value:rotCxc, unit:'x', type:'min', min:8,
+          tipLow:'Cobras con poca frecuencia al año; revisa tus políticas de crédito.' },
+        { name:'Periodo Medio de Cobro', formula:'365 / Rotación de Cuentas por Cobrar', value:periodoCobro, unit:'días', type:'range', min:30, max:45,
+          tipLow:'Cobras muy rápido; verifica que no estés perdiendo ventas por condiciones muy estrictas.', tipHigh:'Tus clientes tardan mucho en pagar; endurece condiciones de crédito.' },
+        { name:'Rotación de Cuentas por Pagar', formula:'Compras a Crédito / Cuentas por Pagar Promedio', value:rotCxp, unit:'x', type:'info', tipInfo:'Debe mantenerse equilibrada respecto a tu ciclo de cobro.' },
+        { name:'Periodo Medio de Pago', formula:'365 / Rotación de Cuentas por Pagar', value:periodoPago, unit:'días', type:'range', min:45, max:60,
+          tipLow: periodoPago < periodoCobro ? 'Estás pagando más rápido de lo que cobras: esto presiona tu flujo de efectivo.' : 'Podrías negociar plazos de pago algo más amplios.',
+          tipHigh:'Plazo de pago muy extendido; cuida la relación con proveedores.' },
+        { name:'Rotación de Activos Totales', formula:'Ventas / Activo Total', value:s.ventasTotales/(s.activoTotal||1), unit:'x', type:'min', min:1.0,
+          tipLow:'Tus activos generan pocas ventas; mejora la eficiencia operativa o vende activos ociosos.' },
+      ]
+    },
+    rentabilidad: {
+      icon:'📈', title:'Módulo 4 · Rentabilidad', items:[
+        { name:'Margen Bruto', formula:'Utilidad Bruta / Ventas Totales', value:s.utilidadBruta/(s.ventasTotales||1), unit:'%', type:'min', min:0.30,
+          tipLow:'El costo de ventas absorbe demasiado; revisa precios o costos de producción.' },
+        { name:'Margen Operativo', formula:'EBIT / Ventas', value:s.ebit/(s.ventasTotales||1), unit:'%', type:'min', min:0.15,
+          tipLow:'Los gastos operativos están comiendo la utilidad; revisa gastos administrativos y de venta.' },
+        { name:'Margen Neto', formula:'Utilidad Neta / Ventas Totales', value:s.utilidadNeta/(s.ventasTotales||1), unit:'%', type:'min', min:0.10,
+          tipLow:'Poca ganancia real por venta; revisa impuestos, intereses y gastos no operativos.' },
+        { name:'ROA', formula:'Utilidad Neta / Activo Total', value:s.utilidadNeta/(s.activoTotal||1), unit:'%', type:'min', min:0.05,
+          tipLow:'Los activos no generan suficiente utilidad; mejora el uso de maquinaria, equipo e inventario.' },
+        { name:'ROE', formula:'Utilidad Neta / Capital Contable', value:s.utilidadNeta/(s.capitalContable||1), unit:'%', type:'min', min:0.15,
+          tipLow:'El rendimiento a los accionistas es bajo frente a inversiones de bajo riesgo; revisa la rentabilidad del negocio.' },
+      ]
+    }
+  };
+}
+
+/* ---------------- status + gauge ---------------- */
+function evalStatus(item){
+  const v = item.value;
+  if (item.type === 'info') return 'info';
+  if (item.type === 'min0') return v > 0 ? 'ok' : 'bad';
+  if (item.type === 'range'){
+    if (v >= item.min && v <= item.max) return 'ok';
+    const span = item.max - item.min;
+    if (v >= item.min - span*0.4 && v <= item.max + span*0.4) return 'warn';
+    return 'bad';
+  }
+  if (item.type === 'min'){
+    if (v >= item.min) return 'ok';
+    if (v >= item.min*0.75) return 'warn';
+    return 'bad';
+  }
+  if (item.type === 'max'){
+    if (v <= item.max) return 'ok';
+    if (v <= item.max*1.3) return 'warn';
+    return 'bad';
+  }
+  return 'info';
+}
+
+function fmtVal(item){
+  if (item.unit === '%') return fmtPct(item.value);
+  if (item.unit === 'días') return fmtDays(item.value);
+  if (item.unit === '$') return fmt$(item.value);
+  return fmtX(item.value);
+}
+
+function gaugeHTML(item){
+  if (item.type === 'min0' || item.type === 'info') return '';
+  let scaleMax, zones = [];
+  if (item.type === 'range'){
+    scaleMax = item.max * 1.7;
+    zones = [
+      {from:0, to:item.min/scaleMax*100, color:'transparent'},
+    ];
+  } else if (item.type === 'min'){
+    scaleMax = item.min * 2.4;
+  } else if (item.type === 'max'){
+    scaleMax = item.max * 1.9;
+  }
+  const pos = Math.max(0, Math.min(100, (item.value/scaleMax)*100));
+  let idealLeft, idealWidth;
+  if (item.type === 'range'){
+    idealLeft = (item.min/scaleMax)*100;
+    idealWidth = ((item.max-item.min)/scaleMax)*100;
+  } else if (item.type === 'min'){
+    idealLeft = (item.min/scaleMax)*100;
+    idealWidth = 100 - idealLeft;
+  } else {
+    idealLeft = 0;
+    idealWidth = (item.max/scaleMax)*100;
+  }
+  const rangeLabel = item.type === 'range' ? `Ideal: ${item.unit==='%'?fmtPct(item.min)+' – '+fmtPct(item.max):(item.unit==='días'?fmtDays(item.min)+' – '+fmtDays(item.max):fmtX(item.min)+' – '+fmtX(item.max))}`
+    : item.type === 'min' ? `Ideal: mayor a ${item.unit==='%'?fmtPct(item.min):(item.unit==='días'?fmtDays(item.min):fmtX(item.min))}`
+    : `Ideal: menor a ${item.unit==='%'?fmtPct(item.max):(item.unit==='días'?fmtDays(item.max):fmtX(item.max))}`;
+  return `
+    <div class="gauge-range-label"><span>${rangeLabel}</span></div>
+    <div class="gauge-track">
+      <div class="gauge-ideal" style="left:${idealLeft}%;width:${idealWidth}%;"></div>
+      <div class="gauge-marker" style="left:${pos}%;"></div>
+    </div>
+  `;
+}
+
+const statusLabel = { ok:'✓ ÓPTIMO', warn:'⚠ ALERTA', bad:'✗ FUERA DE RANGO', info:'ℹ INFORMATIVO' };
+
+function renderAll(){
+  const mods = ratios();
+  const container = document.getElementById('modules');
+  let okCount=0, warnCount=0, badCount=0;
+
+  container.innerHTML = Object.values(mods).map(mod => {
+    const rows = mod.items.map(item => {
+      const status = evalStatus(item);
+      if (status==='ok') okCount++; else if (status==='warn') warnCount++; else if (status==='bad') badCount++;
+      const tip = status==='bad' || status==='warn'
+        ? (item.type==='min0' ? item.tipLow : item.type==='min' ? item.tipLow : item.type==='max' ? item.tipHigh : (item.value < (item.min ?? 0) ? item.tipLow : item.tipHigh))
+        : (item.type==='info' ? item.tipInfo : null);
+      return `
+        <div class="ratio-row">
+          <div class="ratio-top">
+            <div>
+              <span class="ratio-name">${item.name}</span>
+              <span class="ratio-formula">${item.formula}</span>
+            </div>
+            <div class="ratio-value-block">
+              <span class="ratio-value">${fmtVal(item)}</span>
+              <span class="ratio-status ${status}">${statusLabel[status]}</span>
+            </div>
+          </div>
+          ${gaugeHTML(item)}
+          ${tip ? `<div class="tip">${tip}</div>` : ''}
+        </div>
+      `;
+    }).join('');
+    return `
+      <div class="module">
+        <div class="module-head">
+          <span class="icon">${mod.icon}</span>
+          <h2>${mod.title}</h2>
+        </div>
+        ${rows}
+      </div>
+    `;
+  }).join('');
+
+  document.getElementById('diag').innerHTML = `
+    <span class="diag-pill ok"><span class="dot"></span>Óptimos: <span class="diag-count">${okCount}</span></span>
+    <span class="diag-pill warn"><span class="dot"></span>En alerta: <span class="diag-count">${warnCount}</span></span>
+    <span class="diag-pill bad"><span class="dot"></span>Fuera de rango: <span class="diag-count">${badCount}</span></span>
+  `;
+
+  renderCredito();
+}
+
+/* ---------------- credit line estimator (separate, optional tab) ---------------- */
+const CREDIT_INPUTS = [
+  { id:'anticipoCxC',        name:'Anticipo sobre Cuentas por Cobrar', v:75,   min:0, max:100, step:1,   unit:'%' },
+  { id:'anticipoInventario', name:'Anticipo sobre Inventarios',        v:50,   min:0, max:100, step:1,   unit:'%' },
+  { id:'multiploEbitda',     name:'Múltiplo de EBITDA',                v:2.5,  min:0, max:5,   step:0.1, unit:'x' },
+  { id:'dscrObjetivo',       name:'DSCR Objetivo del Banco',           v:1.25, min:1, max:2,   step:0.05,unit:'x' },
+  { id:'tasaInteres',        name:'Tasa de Interés Asumida',           v:12,   min:1, max:25,  step:0.5, unit:'%' },
+  { id:'plazoCredito',       name:'Plazo Asumido del Crédito',         v:5,    min:1, max:15,  step:1,   unit:'años' },
+];
+const creditState = {};
+CREDIT_INPUTS.forEach(f => creditState[f.id] = f.v);
+
+function fmtCreditVal(unit, v){
+  if (unit === '%') return v.toFixed(1) + '%';
+  if (unit === 'x') return v.toFixed(2) + 'x';
+  if (unit === 'años') return v.toFixed(0) + ' años';
+  return v;
+}
+
+function buildCreditInputs(){
+  const panel = document.getElementById('tab-credito');
+  panel.innerHTML = `
+    <div class="credito-grid" id="creditoControls"></div>
+    <div class="credito-summary" id="creditoSummary"></div>
+  `;
+  const controls = document.getElementById('creditoControls');
+  controls.innerHTML = CREDIT_INPUTS.map(f => `
+    <div class="control" id="ctrl-${f.id}">
+      <div class="control-top">
+        <span class="control-name">${f.name}</span>
+        <span class="control-val" id="val-${f.id}">${fmtCreditVal(f.unit, f.v)}</span>
+      </div>
+      <input type="range" id="in-${f.id}" min="${f.min}" max="${f.max}" step="${f.step}" value="${f.v}">
+    </div>
+  `).join('');
+  CREDIT_INPUTS.forEach(f => {
+    document.getElementById('in-' + f.id).addEventListener('input', e => {
+      creditState[f.id] = parseFloat(e.target.value);
+      document.getElementById('val-' + f.id).textContent = fmtCreditVal(f.unit, creditState[f.id]);
+      renderCredito();
+    });
+  });
+}
+
+function renderCredito(){
+  const summaryEl = document.getElementById('creditoSummary');
+  if (!summaryEl) return;
+  const s = state, c = creditState;
+
+  // Método 1 — base de garantía sobre cartera e inventario
+  const cxc = s.cxcProm, inv = s.inventarios;
+  const monto1 = cxc * (c.anticipoCxC / 100) + inv * (c.anticipoInventario / 100);
+
+  // Método 2 — múltiplo de EBITDA menos deuda existente
+  const monto2 = Math.max(0, s.ebitda * c.multiploEbitda - s.pasivoTotal);
+
+  // Método 3 — capacidad de pago (DSCR) convertida a monto vía anualidad
+  const i = c.tasaInteres / 100, n = c.plazoCredito;
+  const servicioMax = s.flujoCajaOperativo / c.dscrObjetivo;
+  const monto3 = i > 0 ? servicioMax * (1 - Math.pow(1 + i, -n)) / i : servicioMax * n;
+
+  const metodos = [
+    { key:'garantia', name:'Base de Garantía',            formula:'CxC Prom.×anticipo + Inventarios×anticipo', value:monto1 },
+    { key:'ebitda',   name:'Múltiplo de EBITDA',           formula:'EBITDA×múltiplo − Pasivo Total',            value:monto2 },
+    { key:'dscr',     name:'Capacidad de Pago (DSCR)',     formula:'Anualidad del servicio de deuda máximo',    value:monto3 },
+  ];
+  const minMethod = metodos.reduce((a, b) => (b.value < a.value ? b : a));
+  const recomendado = minMethod.value;
+
+  // Covenants a vigilar, tomados de las mismas 24 razones
+  const mods = ratios();
+  const watch = [
+    { mod:'liquidez',       name:'Razón Corriente' },
+    { mod:'endeudamiento',  name:'Apalancamiento Financiero' },
+    { mod:'endeudamiento',  name:'Cobertura de Intereses' },
+    { mod:'endeudamiento',  name:'Endeudamiento Total' },
+  ];
+  const flagged = [];
+  watch.forEach(w => {
+    const item = mods[w.mod].items.find(it => it.name === w.name);
+    if (item) {
+      const st = evalStatus(item);
+      if (st === 'bad' || st === 'warn') flagged.push(`${item.name}: ${fmtVal(item)} (${statusLabel[st]})`);
+    }
+  });
+
+  summaryEl.innerHTML = `
+    <div class="credito-methods">
+      ${metodos.map(m => `
+        <div class="credito-method-card" style="${m.key === minMethod.key ? 'outline:2px solid var(--brass);' : ''}">
+          <h3>${m.name}</h3>
+          <span class="m-formula">${m.formula}</span>
+          <span class="m-value">${fmt$(m.value)}</span>
+        </div>
+      `).join('')}
+    </div>
+    <div class="credito-recommend">
+      <div class="r-label">Línea recomendada · el más conservador de los tres métodos</div>
+      <div class="r-value">${fmt$(recomendado)}</div>
+      <div class="r-note">Estimado ilustrativo a partir de las cifras del panel. Una decisión de crédito real también depende del historial de pago, la calidad de las garantías, el sector y la política interna de cada institución.</div>
+    </div>
+    <div class="${flagged.length ? 'covenant-alert' : 'covenant-alert none'}">
+      ${flagged.length
+        ? `<strong>Covenants a vigilar:</strong> ${flagged.length} razón(es) fuera de su rango ideal — normalmente esto reduce el monto o exige garantías adicionales.<div class="covenant-list">${flagged.join(' · ')}</div>`
+        : '<strong>Sin alertas de covenants</strong> — las razones clave de liquidez y endeudamiento están dentro de rango.'}
+    </div>
+  `;
+}
+
+buildInputs();
+buildCreditInputs();
+renderAll();
+
+function exportToExcel(){
+  const mods = ratios();
+  const rows = [];
+  Object.values(mods).forEach(mod => {
+    mod.items.forEach(item => {
+      rows.push({ Modulo: mod.title, Razon: item.name, Formula: item.formula, Valor: fmtVal(item), Estado: statusLabel[evalStatus(item)] });
+    });
+  });
+  const wb = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), 'Razones Financieras');
+
+  const s = state, c = creditState;
+  const cxc = s.cxcProm, inv = s.inventarios;
+  const monto1 = cxc*(c.anticipoCxC/100) + inv*(c.anticipoInventario/100);
+  const monto2 = Math.max(0, s.ebitda*c.multiploEbitda - s.pasivoTotal);
+  const i = c.tasaInteres/100, n = c.plazoCredito;
+  const servicioMax = s.flujoCajaOperativo / c.dscrObjetivo;
+  const monto3 = i>0 ? servicioMax*(1-Math.pow(1+i,-n))/i : servicioMax*n;
+  const credito = [
+    { Metodo:'Base de Garantía', Monto: monto1 },
+    { Metodo:'Múltiplo de EBITDA', Monto: monto2 },
+    { Metodo:'Capacidad de Pago (DSCR)', Monto: monto3 },
+    { Metodo:'Recomendado (mínimo)', Monto: Math.min(monto1, monto2, monto3) },
+  ];
+  XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(credito), 'Línea de Crédito');
+  XLSX.writeFile(wb, 'panel_salud_financiera.xlsx');
+}
+
+function shareWhatsApp(){
+  const mods = ratios();
+  let okCount=0, warnCount=0, badCount=0;
+  Object.values(mods).forEach(mod => mod.items.forEach(item => {
+    const st = evalStatus(item);
+    if (st==='ok') okCount++; else if (st==='warn') warnCount++; else if (st==='bad') badCount++;
+  }));
+  const texto = `Panel de Salud Financiera\n` +
+    `✓ Óptimos: ${okCount}\n⚠ En alerta: ${warnCount}\n✗ Fuera de rango: ${badCount}`;
+  if (navigator.share) {
+    navigator.share({ title:'Panel de Salud Financiera', text: texto }).catch(()=>{});
+  } else {
+    window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank');
+  }
+}
+</script>
+</body>
+</html>

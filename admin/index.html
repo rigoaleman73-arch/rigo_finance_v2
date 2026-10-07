@@ -3,4 +3,25 @@
 <div class="admin-grid"><aside class="card menu"><h3>Contenido</h3><a>Artículos</a><a>Modelos</a><a>Documentos</a><a>Multimedia</a><a>Comentarios</a><a>Usuarios</a><a>Configuración</a></aside>
 <section><div class="stats"><div class="card"><small>ARTÍCULOS</small><strong>12</strong></div><div class="card"><small>MODELOS</small><strong>15</strong></div><div class="card"><small>PENDIENTES</small><strong>3</strong></div></div>
 <div class="card"><h3>Contenido reciente</h3><table><tr><th>Título</th><th>Tipo</th><th>Estado</th></tr><tr><td>Ajuste inflacionario</td><td>Modelo</td><td>Publicado</td></tr><tr><td>FP&A Fiscal</td><td>Artículo</td><td>Publicado</td></tr><tr><td>Nuevo contenido</td><td>Artículo</td><td>Borrador</td></tr></table></div></section></div></main>
-<footer id="site-footer"></footer><script src="../js/navigation.js"></script><script src="../js/admin.js"></script></body></html>
+<footer id="site-footer"></footer>
+
+<!-- 1. Cargamos el script de navegación local de la casa -->
+<script src="../js/navigation.js"></script>
+
+<!-- 2. Cargamos la librería oficial COMPLETA de Supabase desde internet -->
+<script src="https://jsdelivr.net"></script>
+
+<!-- 3. Inyectamos tus nuevas credenciales financieras del proyecto tktomsbcxyaotgbbqszt -->
+<script>
+  const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
+
+  // Inicializamos el cliente global en la memoria del navegador
+  const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+
+<!-- 4. Cargamos el motor del administrador que dibuja tu formulario oscuro -->
+<script src="../js/admin.js"></script>
+
+</body>
+</html>

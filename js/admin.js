@@ -1,3 +1,10 @@
+// ⚡ Conexión V3 inyectada directamente en el motor del administrador
+const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
+const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+
+
 // 📈 RIGO FINANCE V3 — ADMINISTRADOR AUTOMATIZADO CON MENÚ DESPLEGABLE
 document.addEventListener('DOMContentLoaded', () => {
   const btnNuevo = document.getElementById('newArticle');

@@ -34,7 +34,7 @@ app.get('/api/articulos', async (req, res) => {
   }
 });
 
-// Arranca el motor de Rigo Finance
-app.listen(PORT, () => {
+// Arranca el motor de Rigo Finance con apertura para internet
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`📈 Rigo Finance V2 corriendo de forma impecable en el puerto ${PORT}`);
 });

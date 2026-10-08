@@ -1,1 +1,23 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Intelligency | Rigo Finance</title><link rel="stylesheet" href="../css/global.css"></head><body><header id="site-header"></header><main class="section"><span class="eyebrow">INTELLIGENCY</span><h1>Intelligency</h1><p>Sección de Rigo Finance preparada para contenido administrable.</p><div class='cards'><article><h3>Ajuste inflacionario</h3><p>Modelo financiero.</p></article><article><h3>ISR Persona Moral</h3><p>Modelo fiscal.</p></article><article><h3>WACC</h3><p>Modelo financiero.</p></article></div></main><footer id="site-footer"></footer><script src="../js/navigation.js"></script></body></html>
+<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Intelligency | Rigo Finance</title><link rel="stylesheet" href="../css/global.css"></head><body><header id="site-header"></header><main class="section"><span class="eyebrow">INTELLIGENCY</span><h1>Intelligency</h1><p>Sección de Rigo Finance preparada para contenido administrable.</p><div class='cards'><article><h3>Ajuste inflacionario</h3><p>Modelo financiero.</p></article><article><h3>ISR Persona Moral</h3><p>Modelo fiscal.</p></article><article><h3>WACC</h3><p>Modelo financiero.</p></article></div></main>
+<footer id="site-footer"></footer>
+<script src="../js/navigation.js"></script>
+
+<!-- AQUI METEMOS LOS NUEVOS CABLES DEL ENTORNO V3 -->
+
+<!-- 1. Importamos tu librería local blindada estilo pip install -->
+<script src="../js/supabase-local.js"></script>
+
+<!-- 2. Encendemos el cliente con tus credenciales financieras del nuevo proyecto -->
+<script>
+  const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
+  const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
+  
+  // Usamos el truco sin el 'const' para evitar choques con el script local
+  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+</script>
+
+<!-- 3. Llamamos al cerebro receptor que acabamos de programar en el Paso 1 -->
+<script src="../js/intelligency.js"></script>
+
+</body>
+</html>

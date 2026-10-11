@@ -1,23 +1,63 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Intelligency | Rigo Finance</title><link rel="stylesheet" href="../css/global.css"></head><body><header id="site-header"></header><main class="section"><span class="eyebrow">INTELLIGENCY</span><h1>Intelligency</h1><p>Sección de Rigo Finance preparada para contenido administrable.</p><div class='cards'><article><h3>Ajuste inflacionario</h3><p>Modelo financiero.</p></article><article><h3>ISR Persona Moral</h3><p>Modelo fiscal.</p></article><article><h3>WACC</h3><p>Modelo financiero.</p></article></div></main>
-<footer id="site-footer"></footer>
-<script src="../js/navigation.js"></script>
+// 🎰 MOTOR RECEPTOR DINÁMICO — RIGO FINANCE V3.1 (CON ICONOS Y DESCRIPCIÓN LARGA)
+document.addEventListener('DOMContentLoaded', async () => {
+  const contenedor = document.querySelector('.cards');
+  if (!contenedor) return;
 
-<!-- AQUI METEMOS LOS NUEVOS CABLES DEL ENTORNO V3 -->
+  try {
+    const { data: modelos, error } = await supabase
+      .from('articulos')
+      .select('*')
+      .eq('categoria', 'Intelligency')
+      .order('id', { ascending: false });
 
-<!-- 1. Importamos tu librería local blindada estilo pip install -->
-<script src="../js/supabase-local.js"></script>
+    if (error) throw error;
 
-<!-- 2. Encendemos el cliente con tus credenciales financieras del nuevo proyecto -->
-<script>
-  const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
-  
-  // Usamos el truco sin el 'const' para evitar choques con el script local
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-</script>
+    if (modelos.length === 0) {
+      contenedor.innerHTML = '<div class="card"><p style="color:#4a5a68; text-align:center;">Aún no has registrado modelos interactivos desde tu panel de Admin.</p></div>';
+      return;
+    }
 
-<!-- 3. Llamamos al cerebro receptor que acabamos de programar en el Paso 1 -->
-<script src="../js/intelligency.js"></script>
+    // Dibujamos las tarjetas dinámicas usando los nuevos campos
+    contenedor.innerHTML = modelos.map(item => {
+      // Validamos si guardaste un emoji, una ruta de imagen o nada
+      let iconoHtml = `<span style="font-size:32px;">📊</span>`;
+      if (item.imagen_url) {
+        if (item.imagen_url.includes('/') || item.imagen_url.includes('.')) {
+          iconoHtml = `<img src="${item.imagen_url}" style="width:40px; height:40px; object-fit:contain;">`;
+        } else {
+          iconoHtml = `<span style="font-size:32px;">${item.imagen_url}</span>`;
+        }
+      }
 
-</body>
-</html>
+      const descripcionLarga = item.contenido || 'Sin descripción detallada.';
+
+      return `
+        <article class="card" style="background:#fff; border:1px solid #d8d3c4; border-radius:4px; padding:24px; margin-bottom:24px; display:flex; flex-direction:column; gap:16px;">
+          
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; border-bottom:1px solid #e7efe9; padding-bottom:12px;">
+            <div style="display:flex; align-items:center; gap:14px;">
+              ${iconoHtml}
+              <h3 style="font-family:'Source Serif 4', serif; font-size:18px; margin:0; font-weight:700; color:#1b2a3a;">${item.titulo}</h3>
+            </div>
+            <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#8f6538; background:#f1efe7; padding:4px 10px; border-radius:3px; font-weight:600; white-space:nowrap;">MODELO INTERACTIVO</span>
+          </div>
+
+          <!-- Cuadro de texto para tus 10 líneas de análisis con scroll elegante si se pasa -->
+          <div style="color:#4a5a68; font-size:14px; line-height:1.6; white-space:pre-line; max-height:220px; overflow-y:auto; padding-right:8px;">
+            ${descripcionLarga}
+          </div>
+
+          <div style="margin-top:auto; border-top:1px solid #f1efe7; padding-top:14px; display:flex; justify-content:flex-end;">
+            <a href="${item.pdf_url}" class="btn primary" style="text-decoration:none; display:inline-block; font-size:13px; font-weight:600; padding:10px 18px; background:#1b2a3a; color:#fafaf6; border-radius:3px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Abrir Simulador Interactivo 🚀</a>
+          </div>
+
+        </article>
+      `;
+    }).join('');
+
+  } catch (err) {
+    console.error('Error al cargar modelos desde Supabase:', err);
+    contenedor.innerHTML = '<div class="card"><p style="color:#a13d2e;">❌ Error al conectar con el catálogo cloud.</p></div>';
+  }
+});
+

@@ -1,43 +1,53 @@
-// 🎰 MOTOR RECEPTOR DINÁMICO — RIGO FINANCE V3
+// 🎰 MOTOR RECEPTOR INDESTRUCTIBLE — RIGO FINANCE V3.1
 document.addEventListener('DOMContentLoaded', async () => {
-  // 1. Buscamos el contenedor del diseño donde el programador dejó la clase 'cards'
   const contenedor = document.querySelector('.cards');
-  
   if (!contenedor) return;
 
   try {
-    // 2. Le pedimos a tu nueva base de datos cloud (tktomsbcxyaotgbbqszt) los modelos
     const { data: modelos, error } = await supabase
       .from('articulos')
       .select('*')
-      .eq('categoria', 'Intelligency') // Solo trae los que registres en esa sección
+      .eq('categoria', 'Intelligency')
       .order('id', { ascending: false });
 
     if (error) throw error;
 
-    // 3. Si la base de datos está vacía, mostramos un letrero limpio
     if (modelos.length === 0) {
       contenedor.innerHTML = '<div class="card"><p style="color:#4a5a68; text-align:center;">Aún no has registrado modelos interactivos desde tu panel de Admin.</p></div>';
       return;
     }
 
-    // 4. ¡La magia! Borramos el texto estático viejo y pintamos las tarjetas reales de la nube
-    contenedor.innerHTML = modelos.map(item => `
-      <article class="card" style="background:#fff; border:1px solid #d8d3c4; border-radius:4px; padding:20px 22px; margin-bottom:18px;">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px;">
-          <h3 style="font-family:'Source Serif 4', serif; font-size:16px; margin:0; font-weight:600;">${item.titulo}</h3>
-          <span style="font-family:'IBM Plex Mono', monospace; font-size:11px; color:#8f6538; background:#f1efe7; padding:3px 8px; border-radius:3px;">MODELO INTERACTIVO</span>
-        </div>
-        <p style="color:#4a5a68; font-size:13.5px; margin:0 0 14px;">${item.resumen}</p>
-        <div>
-          <!-- El botón apunta directo a la ruta /models/tu-archivo.html que seleccionaste en el Admin -->
-          <a href="${item.pdf_url}" class="btn primary" style="text-decoration:none; display:inline-block; font-size:13px; font-weight:600; padding:8px 14px; background:#1b2a3a; color:#fafaf6; border-radius:3px;">Abrir Simulador 🚀</a>
-        </div>
-      </article>
-    `).join('');
+    // Construcción limpia usando concatenación clásica de texto (Inmune a errores de comillas)
+    let htmlFinal = '';
+    modelos.forEach(item => {
+      let iconoHtml = '<span style="font-size:32px;">📊</span>';
+      if (item.imagen_url) {
+        if (item.imagen_url.includes('/') || item.imagen_url.includes('.')) {
+          iconoHtml = '<img src="' + item.imagen_url + '" style="width:40px; height:40px; object-fit:contain;">';
+        } else {
+          iconoHtml = '<span style="font-size:32px;">' + item.imagen_url + '</span>';
+        }
+      }
+
+      let descripcionLarga = item.contenido || 'Sin descripción detallada.';
+
+      htmlFinal += '<article class="card" style="background:#fff; border:1px solid #d8d3c4; border-radius:4px; padding:24px; margin-bottom:24px; display:flex; flex-direction:column; gap:16px;">';
+      htmlFinal += '  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; border-bottom:1px solid #e7efe9; padding-bottom:12px;">';
+      htmlFinal += '    <div style="display:flex; align-items:center; gap:14px;">' + iconoHtml + '<h3 style="font-family:\'Source Serif 4\', serif; font-size:18px; margin:0; font-weight:700; color:#1b2a3a;">' + item.titulo + '</h3></div>';
+      htmlFinal += '    <span style="font-family:\'IBM Plex Mono\', monospace; font-size:11px; color:#8f6538; background:#f1efe7; padding:4px 10px; border-radius:3px; font-weight:600; white-space:nowrap;">MODELO INTERACTIVO</span>';
+      htmlFinal += '  </div>';
+      htmlFinal += '  <div style="color:#4a5a68; font-size:14px; line-height:1.6; white-space:pre-line; max-height:220px; overflow-y:auto; padding-right:8px;">' + descripcionLarga + '</div>';
+      htmlFinal += '  <div style="margin-top:auto; border-top:1px solid #f1efe7; padding-top:14px; display:flex; justify-content:flex-end;">';
+      htmlFinal += '    <a href="' + item.pdf_url + '" class="btn primary" style="text-decoration:none; display:inline-block; font-size:13px; font-weight:600; padding:10px 18px; background:#1b2a3a; color:#fafaf6; border-radius:3px;">Abrir Simulador Interactivo 🚀</a>';
+      htmlFinal += '  </div>';
+      htmlFinal += '</article>';
+    });
+
+    contenedor.innerHTML = htmlFinal;
 
   } catch (err) {
-    console.error('Error al cargar modelos desde Supabase:', err);
+    console.error(err);
     contenedor.innerHTML = '<div class="card"><p style="color:#a13d2e;">❌ Error al conectar con el catálogo cloud.</p></div>';
   }
 });
+

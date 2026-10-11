@@ -1,22 +1,47 @@
-<footer id="site-footer"></footer>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Intelligency | Rigo Finance</title>
+  <link rel="stylesheet" href="../css/global.css">
+</head>
+<body>
 
-<!-- 1. El script de navegación de la casa -->
-<script src="../js/navigation.js"></script>
+  <!-- 1. Contenedor de Navegación Maestro (¡Obligatorio para navigation.js!) -->
+  <header id="site-header"></header>
 
-<!-- 2. Tu librería local blindada estilo pip install -->
-<script src="../js/supabase-local.js"></script>
+  <main class="section">
+    <span class="eyebrow">INTELLIGENCY</span>
+    <h1>Intelligency</h1>
+    <p>Sección de Rigo Finance preparada para contenido administrable desde Supabase Cloud.</p>
+    
+    <!-- Contenedor donde el JS inyectará las tarjetas dinámicas de Supabase -->
+    <div class="cards"></div>
+  </main>
 
-<!-- 3. Encendemos el cliente con tus credenciales financieras del nuevo proyecto -->
-<script>
-  const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
-  const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
+  <!-- 2. Contenedor de Pie de Página Maestro (¡Obligatorio para navigation.js!) -->
+  <footer id="site-footer"></footer>
+
+  <!-- ==================== CABLES DE INICIALIZACIÓN V3.2 ==================== -->
   
-  // Inicializamos la variable global de Supabase
-  supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-</script>
+  <!-- A) Script de navegación local de la casa -->
+  <script src="../js/navigation.js"></script>
 
-<!-- 4. Llamamos de forma externa a su verdadero cerebro de la carpeta js -->
-<script src="../js/intelligency.js"></script>
+  <!-- B) Librería local blindada estilo pip install -->
+  <script src="../js/supabase-local.js"></script>
+
+  <!-- C) Encendemos el cliente con tus credenciales de finanzas -->
+  <script>
+    const SUPABASE_URL = "https://supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
+    
+    // Asignación directa a la variable global sin colisiones
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  </script>
+
+  <!-- D) El motor dinámico receptor que dibuja tus modelos de la nube -->
+  <script src="../js/intelligency.js"></script>
 
 </body>
 </html>

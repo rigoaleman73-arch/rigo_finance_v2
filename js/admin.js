@@ -1,32 +1,33 @@
-// 📊 RIGO FINANCE V3.2 — PARTE 1: NÚCLEO ADMINISTRATIVO
+// 📊 RIGO FINANCE V3.2 — PIEZA 2 (PARTE A): CONEXIÓN Y CUADRÍCULA CONTABLE
 const SUPABASE_URL = "https://supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
 document.addEventListener('DOMContentLoaded', () => {
-  const opcionesMenu = document.querySelectorAll('.menu a');
+  const btnModelos = document.getElementById('menu-modelos');
   const zonaPrincipal = document.querySelector('section');
 
-  if (opcionesMenu.length > 0 && zonaPrincipal) {
-    opcionesMenu.forEach(enlace => {
-      if (enlace.innerText.trim() === 'Modelos') {
-        enlace.style.cursor = 'pointer';
-        enlace.addEventListener('click', (e) => {
-          e.preventDefault();
-          cargarPanelModelos(zonaPrincipal);
-        });
-      }
+  if (btnModelos && zonaPrincipal) {
+    btnModelos.addEventListener('click', (e) => {
+      e.preventDefault();
+      
+      // Efecto visual tipo Excel: Marcamos la hoja seleccionada
+      document.querySelectorAll('.menu a').forEach(el => el.classList.remove('active-excel'));
+      btnModelos.classList.add('active-excel');
+      
+      cargarPanelModelos(zonaPrincipal);
     });
   }
 
-  const btnNuevoOriginal = document.getElementById('newArticle');
-  if (btnNuevoOriginal) {
-    btnNuevoOriginal.addEventListener('click', () => abrirFormularioNuevo());
+  const btnNuevo = document.getElementById('newArticle');
+  if (btnNuevo) {
+    btnNuevo.addEventListener('click', () => abrirFormularioNuevo());
   }
 });
 
+// 🔄 FUNCIÓN: Carga la lista de la nube en la cuadrícula contable
 async function cargarPanelModelos(contenedor) {
-  contenedor.innerHTML = '<div class="card"><h3>🔍 Conectando con Supabase Cloud...</h3></div>';
+  contenedor.innerHTML = '<div class="card"><h3>🔍 Leyendo registros de Supabase Cloud...</h3></div>';
   try {
     const { data: modelos, error } = await supabase
       .from('articulos')
@@ -37,16 +38,16 @@ async function cargarPanelModelos(contenedor) {
     if (error) throw error;
 
     let html = '<div class="card" style="background:#fff; padding:20px; border-radius:4px; border:1px solid #d8d3c4;">';
-    html += '  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px;">';
-    html += '    <h3 style="margin:0; font-family:\'Source Serif 4\', serif; font-size:18px; color:#1b2a3a;">🎰 Catálogo de Modelos Activos en la Nube</h3>';
+    html += '  <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px; flex-wrap:wrap;">';
+    html += '    <h3 style="margin:0; font-family:\'Source Serif 4\', serif; font-size:18px; color:#1b2a3a;">🎰 Catálogo de Modelos Activos</h3>';
     html += '    <button class="btn primary" style="background:#1b2a3a; color:#fafaf6; border:none; padding:8px 14px; border-radius:3px; cursor:pointer; font-weight:600;" onclick="abrirFormularioNuevo()">+ Agregar Nuevo Modelo</button>';
     html += '  </div>';
     html += '  <table style="width:100%; border-collapse:collapse; font-size:13.5px; text-align:left;">';
-    html += '    <thead><tr style="border-bottom:2px solid #1b2a3a;"><th style="padding:8px;">Icono</th><th style="padding:8px;">Título del Simulador</th><th style="padding:8px;">Ruta de Archivo local</th><th style="padding:8px; text-align:center;">Acciones de Control</th></tr></thead>';
+    html += '    <thead><tr style="border-bottom:2px solid #1b2a3a;"><th style="padding:8px;">Icono</th><th style="padding:8px;">Título del Simulador</th><th style="padding:8px;">Archivo Enlazado</th><th style="padding:8px; text-align:center;">Acciones</th></tr></thead>';
     html += '    <tbody>';
 
     if (modelos.length === 0) {
-      html += '<tr><td colspan="4" style="padding:20px; text-align:center; color:#4a5a68;">No hay modelos guardados. ¡Registra el primero!</td></tr>';
+      html += '<tr><td colspan="4" style="padding:20px; text-align:center; color:#4a5a68;">No hay modelos guardados en la nube todavía.</td></tr>';
     } else {
       modelos.forEach(item => {
         html += '<tr style="border-bottom:1px solid #d8d3c4;">';
@@ -54,8 +55,8 @@ async function cargarPanelModelos(contenedor) {
         html += '  <td style="padding:10px; font-weight:600; color:#1b2a3a;">' + item.titulo + '</td>';
         html += '  <td style="padding:10px; font-family:monospace; color:#4a5a68;">' + item.pdf_url + '</td>';
         html += '  <td style="padding:10px; text-align:center; white-space:nowrap;">';
-        html += '    <button class="btn" style="background:#b5834c; color:#fff; border:none; padding:6px 10px; border-radius:3px; cursor:pointer; margin-right:6px; font-size:12px; font-weight:600;" onclick="abrirEditorModelo(' + item.id + ')">📝 Editar</button>';
-        html += '    <button class="btn" style="background:#a13d2e; color:#fff; border:none; padding:6px 10px; border-radius:3px; cursor:pointer; font-size:12px; font-weight:600;" onclick="eliminarModelo(' + item.id + ')">🗑️ Borrar</button>';
+        html += '    <button class="btn" style="background:#b5834c; color:#fff; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; margin-right:6px; font-size:12px;" onclick="abrirEditorModelo(' + item.id + ')">📝 Editar</button>';
+        html += '    <button class="btn" style="background:#a13d2e; color:#fff; border:none; padding:4px 8px; border-radius:3px; cursor:pointer; font-size:12px;" onclick="eliminarModelo(' + item.id + ')">🗑️ Borrar</button>';
         html += '  </td>';
         html += '</tr>';
       });
@@ -66,30 +67,21 @@ async function cargarPanelModelos(contenedor) {
     contenedor.innerHTML = '<div class="card"><p style="color:#a13d2e;">❌ Error: ' + err.message + '</p></div>';
   }
 }
-
-// 📊 RIGO FINANCE V3.2 — PARTE 2: FORMULARIOS Y ACCIONES CONTABLES
-async function abrirFormularioNuevo() {
-  let opcionesArchivos = '<option value="">⏳ Escaneando carpeta /models...</option>';
-  try {
-    const respuesta = await fetch('/api/lista-modelos-locales');
-    const archivos = await respuesta.json();
-    if (archivos && archivos.length > 0) {
-      opcionesArchivos = archivos.map(file => '<option value="/models/' + file + '">' + file + '</option>').join('');
-    } else {
-      opcionesArchivos = '<option value="">⚠️ Sin archivos HTML en la carpeta /models</option>';
-    }
-  } catch (err) {
-    opcionesArchivos = '<option value="">❌ Error al escanear directorio</option>';
-  }
-
+// 📊 RIGO FINANCE V3.2 — PIEZA 2 (PARTE B): EXPLORADOR NATIVO Y ACCIONES
+function abrirFormularioNuevo() {
   const modal = document.createElement('div');
   modal.style = 'position:fixed; top:50%; left:50%; transform:translate(-50%, -50%); z-index:250; width:90%; max-width:500px; background:#16222f; padding:24px; border:1px solid #2b5c8a; border-radius:6px; box-shadow:0 20px 50px rgba(0,0,0,0.6); color:#fff;';
   
   let fHtml = '<h2 style="margin:0 0 16px; font-family:\'Source Serif 4\', serif;">🚀 Registrar Nuevo Modelo</h2>';
   fHtml += '<form id="formNuevoObjeto" style="display:flex; flex-direction:column; gap:12px;">';
-  fHtml += '  <div><label style="color:#b5834c; font-weight:600;">Título</label><input type="text" id="insTitulo" required style="width:100%; padding:8px; background:#0f1a26; color:#fff; border:1px solid #4a5a68; border-radius:3px;"></div>';
+  fHtml += '  <div><label style="color:#b5834c; font-weight:600;">Título del Modelo</label><input type="text" id="insTitulo" required style="width:100%; padding:8px; background:#0f1a26; color:#fff; border:1px solid #4a5a68; border-radius:3px;"></div>';
   fHtml += '  <div><label style="color:#b5834c; font-weight:600;">Icono (Emoji)</label><input type="text" id="insIcono" placeholder="📊" style="width:100%; padding:8px; background:#0f1a26; color:#fff; border:1px solid #4a5a68; border-radius:3px;"></div>';
-  fHtml += '  <div><label style="color:#b5834c; font-weight:600;">🎰 Seleccionar Archivo</label><select id="insRuta" required style="width:100%; padding:8px; background:#0f1a26; color:#fff; border:1px solid #4a5a68; border-radius:3px;">' + opcionesArchivos + '</select></div>';
+  
+  // Activa el explorador de archivos nativo de Windows (Application.GetOpenFilename Style)
+  fHtml += '  <div><label style="color:#b5834c; font-weight:600;">📁 Seleccionar Archivo Interactivo (HTML)</label>';
+  fHtml += '       <input type="file" id="insArchivoFile" accept=".html" required style="display:block; margin-top:6px; color:#fff; font-size:13px;">';
+  fHtml += '  </div>';
+  
   fHtml += '  <div><label style="color:#b5834c; font-weight:600;">📖 Análisis (10 líneas)</label><textarea id="insContenido" required rows="5" style="width:100%; padding:8px; background:#0f1a26; color:#fff; border:1px solid #4a5a68; border-radius:3px; font-family:inherit;"></textarea></div>';
   fHtml += '  <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:10px;">';
   fHtml += '    <button type="button" id="btnCancelIns" class="btn" style="background:#4a5a68; color:#fff; border:none; padding:8px 14px; border-radius:3px; cursor:pointer;">Cancelar</button>';
@@ -102,18 +94,26 @@ async function abrirFormularioNuevo() {
   document.getElementById('btnCancelIns').addEventListener('click', () => modal.remove());
   document.getElementById('formNuevoObjeto').addEventListener('submit', async (e) => {
     e.preventDefault();
+    
+    const fileInput = document.getElementById('insArchivoFile');
+    let nombreArchivo = 'modelo_alternativo.html';
+    if (fileInput.files && fileInput.files.length > 0) {
+      nombreArchivo = fileInput.files[0].name;
+    }
+
     const paquete = {
       titulo: document.getElementById('insTitulo').value,
       categoria: 'Intelligency',
       resumen: document.getElementById('insTitulo').value,
       contenido: document.getElementById('insContenido').value,
-      pdf_url: document.getElementById('insRuta').value,
+      pdf_url: '/models/' + nombreArchivo,
       imagen_url: document.getElementById('insIcono').value || '📊'
     };
+
     try {
       const { error } = await supabase.from('articulos').insert([paquete]);
       if (error) throw error;
-      alert('🎉 ¡Modelo guardado con éxito!');
+      alert('🎉 ¡Modelo guardado con éxito en la nube!');
       modal.remove();
       window.location.reload();
     } catch (err) {
@@ -168,10 +168,11 @@ async function eliminarModelo(id) {
     try {
       const { error } = await supabase.from('articulos').delete().eq('id', id);
       if (error) throw error;
-      alert('🗑️ Registro borrado.');
+      alert('🗑️ Registro borrado correctamente.');
       window.location.reload();
     } catch (err) {
       alert('Error: ' + err.message);
     }
   }
 }
+

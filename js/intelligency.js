@@ -1,23 +1,25 @@
-// 🎰 MOTOR RECEPTOR INDESTRUCTIBLE — RIGO FINANCE V3.1
+// 🎰 MOTOR RECEPTOR INDESTRUCTIBLE — RIGO FINANCE V3.2
 document.addEventListener('DOMContentLoaded', async () => {
   const contenedor = document.querySelector('.cards');
   if (!contenedor) return;
 
   try {
+    // Le pedimos a Supabase los registros de tu nueva base de datos
     const { data: modelos, error } = await supabase
       .from('articulos')
       .select('*')
-      .eq('categoria', 'Intelligency')
+      .eq('categoria', 'Intelligency') // Filtro homologado al 100% con tu admin
       .order('id', { ascending: false });
 
     if (error) throw error;
 
-    if (modelos.length === 0) {
-      contenedor.innerHTML = '<div class="card"><p style="color:#4a5a68; text-align:center;">Aún no has registrado modelos interactivos desde tu panel de Admin.</p></div>';
+    // Si la base de datos está vacía o no coincide el filtro, muestra el letrero
+    if (!modelos || modelos.length === 0) {
+      contenedor.innerHTML = '<div class="card" style="background:#fff; padding:20px; border-radius:4px; border:1px solid #d8d3c4;"><p style="color:#4a5a68; text-align:center; margin:0;">Aún no has registrado modelos interactivos desde tu panel de Admin con la categoría "Intelligency".</p></div>';
       return;
     }
 
-    // Construcción limpia usando concatenación clásica de texto (Inmune a errores de comillas)
+    // Construcción limpia inmune a errores de comillas del Bloc de notas
     let htmlFinal = '';
     modelos.forEach(item => {
       let iconoHtml = '<span style="font-size:32px;">📊</span>';
@@ -38,7 +40,7 @@ document.addEventListener('DOMContentLoaded', async () => {
       htmlFinal += '  </div>';
       htmlFinal += '  <div style="color:#4a5a68; font-size:14px; line-height:1.6; white-space:pre-line; max-height:220px; overflow-y:auto; padding-right:8px;">' + descripcionLarga + '</div>';
       htmlFinal += '  <div style="margin-top:auto; border-top:1px solid #f1efe7; padding-top:14px; display:flex; justify-content:flex-end;">';
-      htmlFinal += '    <a href="' + item.pdf_url + '" class="btn primary" style="text-decoration:none; display:inline-block; font-size:13px; font-weight:600; padding:10px 18px; background:#1b2a3a; color:#fafaf6; border-radius:3px;">Abrir Simulador Interactivo 🚀</a>';
+      htmlFinal += '    <a href="' + item.pdf_url + '" class="btn primary" style="text-decoration:none; display:inline-block; font-size:13px; font-weight:600; padding:10px 18px; background:#1b2a3a; color:#fafaf6; border-radius:3px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">Abrir Simulador Interactivo 🚀</a>';
       htmlFinal += '  </div>';
       htmlFinal += '</article>';
     });

@@ -1,5 +1,5 @@
 // 📊 RIGO FINANCE V3.2 — PIEZA 2 (PARTE A): CONEXIÓN Y CUADRÍCULA CONTABLE
-const SUPABASE_URL = "https://supabase.co";
+const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
 supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 

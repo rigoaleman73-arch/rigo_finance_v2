@@ -1,8 +1,18 @@
-// 📊 RIGO FINANCE V3.3 — PARTE A: NÚCLEO ADMINISTRATIVO AVANZADO
+// 📊 RIGO FINANCE V3.4 — PARTE A: NÚCLEO ADMINISTRATIVO AVANZADO
+
+// 1. Primero declaras las constantes con tus credenciales
 const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
-supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
+// 2. Luego creas el cliente UNA SOLA VEZ con la configuración limpia
+const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    persistSession: false,
+    autoRefreshToken: false
+  }
+});
+
+// 3. ¡Y listo! Aquí abajo sigue todo tu código de siempre sin cambios
 document.addEventListener('DOMContentLoaded', () => {
   const btnModelos = document.getElementById('menu-modelos');
   const zonaPrincipal = document.querySelector('section');

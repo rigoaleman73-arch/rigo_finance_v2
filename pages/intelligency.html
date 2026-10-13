@@ -1,96 +1,62 @@
-// 📊 js/intelligency.js — MOTOR RECEPTOR DINÁMICO (V3.4)
-
-// 1. Limpiamos la configuración del cliente global ya existente en el HTML
-// Esto destruye el token fantasma que causaba que la consulta regresara vacía.
-supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-  auth: {
-    persistSession: false,
-    autoRefreshToken: false
-  }
-});
-
-document.addEventListener('DOMContentLoaded', () => {
-    cargarTarjetasIntelligency();
-});
-
-async function cargarTarjetasIntelligency() {
-    // Buscamos la clase exacta que definiste en tu HTML: <div class="cards"></div>
-    const contenedor = document.querySelector('.cards');
-    if (!contenedor) return;
-
-    contenedor.innerHTML = '<div style="padding:20px; color:#1b2a3a;">🔍 Extrayendo modelos financieros de Supabase...</div>';
-
-    try {
-        // Consultamos los artículos activos de la nube
-        const { data: articulos, error } = await supabase
-            .from('articulos')
-            .select('*')
-            .eq('categoria', 'Intelligency')
-            .order('id', { ascending: false });
-
-        if (error) throw error;
-
-        // Si la red responde bien, guardamos una copia de respaldo para supabase-local.js
-        localStorage.setItem('rigo_cache_intelligency', JSON.stringify(articulos));
-
-        renderizarTarjetas(articulos, contenedor);
-
-    } catch (error) {
-        console.warn('⚠️ Error de conexión. Activando escudo local...', error);
-        // Fallback: Si falla el internet, jalar del respaldo local
-        const datosLocales = localStorage.getItem('rigo_cache_intelligency');
-        if (datosLocales) {
-            renderizarTarjetas(JSON.parse(datosLocales), contenedor);
-        } else {
-            contenedor.innerHTML = '<div style="padding:20px; color:red;">❌ Error al conectar con Supabase.</div>';
-        }
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Intelligency | Rigo Finance V3.4</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    .powerbi-container iframe {
+      width: 100% !important;
+      height: 450px !important;
+      border: none !important;
+      border-radius: 4px;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
     }
-}
+  </style>
+</head>
+<body>
 
-function renderizarTarjetas(articulos, contenedor) {
-    if (!articulos || articulos.length === 0) {
-        contenedor.innerHTML = '<div style="padding:20px; color:#718096;">🎰 No hay modelos activos en este momento.</div>';
-        return;
-    }
+  <!-- 1. Contenedor de Navegación Maestro (¡Obligatorio para navigation.js!) -->
+  <header id="site-header"></header>
 
-    contenedor.innerHTML = ''; // Limpiar mensaje de carga
+  <main class="section">
+    <span class="eyebrow">INTELLIGENCY</span>
+    <h1>Intelligency</h1>
+    <p>Sección de Rigo Finance preparada para contenido administrable desde Supabase Cloud.</p>
+    
+    <!-- Contenedor donde el JS inyectará las tarjetas dinámicas de Supabase -->
+    <div class="cards"></div>
+  </main>
 
-    articulos.forEach(articulo => {
-        const tarjeta = document.createElement('div');
-        tarjeta.className = 'tarjeta-premium-v3';
-        tarjeta.style.cssText = 'background:#fff; border:1px solid #d8d3c4; padding:20px; margin-bottom:20px; border-radius:4px;';
-        
-        // Inyectamos la estructura respetando tus nuevos campos de la V3.4
-        tarjeta.innerHTML = `
-            <div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">
-                <img src="${articulo.imagen_url || 'https://placehold.co'}" style="width:40px; height:40px; object-fit:contain;" onerror="this.src='https://placehold.co'"/>
-                <h3 style="margin:0; font-family:'Source Serif 4', serif; color:#1b2a3a;">${articulo.titulo}</h3>
-            </div>
-            <p style="font-size:14px; color:#4a5568; line-height:1.6; text-align:justify;">${articulo.resumen || ''}</p>
-            <div style="margin: 12px 0; font-size:13px; display:flex; gap:15px;">
-                ${articulo.pdf_url ? `<a href="\${articulo.pdf_url}" target="_blank" style="color:#2b6cb0; text-decoration:none; font-weight:600;">📄 Ver Reporte PDF</a>` : ''}
-                ${articulo.mapa_url ? `<a href="\${articulo.mapa_url}" target="_blank" style="color:#2b6cb0; text-decoration:none; font-weight:600;">🗺️ Ver Mapa Conceptual</a>` : ''}
-            </div>
-            <!-- Contenedor dinámico para el iframe embebido de Power BI -->
-            <div class="powerbi-container" id="bi-${articulo.id}" style="margin-top:15px; background:#f7fafc; border-radius:4px;"></div>
-        `;
-        
-        contenedor.appendChild(tarjeta);
+  <!-- 2. Contenedor de Pie de Página Maestro (¡Obligatorio para navigation.js!) -->
+  <footer id="site-footer"></footer>
 
-        // 3. Transformación del texto plano de la base de datos en un Iframe real de Power BI
-        if (articulo.contenido && articulo.contenido.includes('<iframe')) {
-            const biDiv = document.getElementById(`bi-${articulo.id}`);
-            if (biDiv) {
-                biDiv.innerHTML = articulo.contenido;
-                // Ajuste de estilo rápido para que el iframe se adapte al ancho de la tarjeta
-                const iframe = biDiv.querySelector('iframe');
-                if (iframe) {
-                    iframe.style.width = '100%';
-                    iframe.style.height = '400px';
-                    iframe.style.border = '0';
-                }
-            }
-        }
+  <!-- ==================== CABLES DE INICIALIZACIÓN V3.4 ==================== -->
+  <script src="../js/navigation.js"></script>
+  <script src="../js/supabase-local.js"></script>
+
+  <!-- C) Encendemos el cliente con tus credenciales de finanzas -->
+  <script>
+    const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
+    
+    // Inicialización limpia para destruir el token fantasma del navegador
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: {
+        persistSession: false,
+        autoRefreshToken: false
+      }
     });
-}
+  </script>
+
+  <!-- D) El motor dinámico receptor anti-caché -->
+  <script>
+    const script = document.createElement('script');
+    script.src = "../js/intelligency.js?t=" + String(new Date().getTime());
+    document.body.appendChild(script);
+  </script>
+
+</body>
+</html>
 

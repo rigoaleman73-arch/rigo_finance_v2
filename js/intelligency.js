@@ -1,66 +1,91 @@
-// 🎰 MOTOR RECEPTOR CENTRALIZADO — RIGO FINANCE V3.3 (CON MAPAS CONCEPTUALES)
-const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
-const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
-supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// 📊 js/intelligency.js — MOTOR RECEPTOR DINÁMICO (V3.4)
 
-document.addEventListener('DOMContentLoaded', async () => {
-  const contenedor = document.querySelector('.cards');
-  if (!contenedor) return;
+document.addEventListener('DOMContentLoaded', () => {
+    cargarTarjetasIntelligency();
+});
 
-  try {
-    const { data: modelos, error } = await supabase
-      .from('articulos')
-      .select('*')
-      .eq('categoria', 'Intelligency')
-      .order('id', { ascending: false });
+async function cargarTarjetasIntelligency() {
+    const contenedor = document.querySelector('.cards');
+    if (!contenedor) return;
 
-    if (error) throw error;
+    contenedor.innerHTML = '<div style="padding:20px; color:#1b2a3a;">🔍 Extrayendo modelos financieros de Supabase...</div>';
 
-    if (!modelos || modelos.length === 0) {
-      contenedor.innerHTML = '<div class="card" style="background:#fff; padding:20px; border-radius:4px; border:1px solid #d8d3c4;"><p style="color:#4a5a68; text-align:center; margin:0;">Aún no has registrado modelos interactivos desde tu panel de Admin.</p></div>';
-      return;
+    try {
+        // Consultamos la tabla usando el cliente 'supabase' que ya encendió el HTML
+        const { data: articulos, error } = await supabase
+            .from('articulos')
+            .select('*')
+            .eq('categoria', 'Intelligency')
+            .order('id', { ascending: false });
+
+        if (error) throw error;
+
+        // Guardamos copia de respaldo local (Escudo contra fallas de red)
+        localStorage.setItem('rigo_cache_intelligency', JSON.stringify(articulos));
+
+        renderizarTarjetas(articulos, contenedor);
+
+    } catch (error) {
+        console.warn('⚠️ Error de conexión. Activando escudo local...', error);
+        const datosLocales = localStorage.getItem('rigo_cache_intelligency');
+        if (datosLocales) {
+            renderizarTarjetas(JSON.parse(datosLocales), contenedor);
+        } else {
+            contenedor.innerHTML = '<div style="padding:20px; color:red;">❌ Error al conectar con Supabase Cloud.</div>';
+        }
+    }
+}
+
+function renderizarTarjetas(articulos, contenedor) {
+    if (!articulos || articulos.length === 0) {
+        contenedor.innerHTML = '<div style="padding:20px; color:#718096;">🎰 No hay modelos activos en este momento.</div>';
+        return;
     }
 
-    let htmlFinal = '';
-    modelos.forEach(item => {
-      // Si el icono es una imagen de Supabase Storage, se dibuja como etiqueta img
-      let iconoHtml = '<span style="font-size:32px;">📊</span>';
-      if (item.imagen_url) {
-        iconoHtml = item.imagen_url.includes('/') ? '<img src="' + item.imagen_url + '" style="width:40px; height:40px; object-fit:contain; border-radius:4px;">' : '<span style="font-size:32px;">' + item.imagen_url + '</span>';
-      }
+    contenedor.innerHTML = ''; // Limpiar mensaje de carga
 
-      // NUEVO: Si inyectaste un mapa conceptual, crea un bloque visual espectacular
-      let mapaHtml = '';
-      if (item.mapa_url) {
-        mapaHtml += '<div style="margin-top:14px; border:1px solid #e7efe9; border-radius:4px; overflow:hidden; background:#fafaf6; padding:10px; text-align:center;">';
-        mapaHtml += '  <small style="color:#8f6538; font-weight:600; display:block; margin-bottom:6px; font-family:monospace;">🧠 MAPA CONCEPTUAL / ARQUITECTURA DEL MODELO</small>';
-        mapaHtml += '  <img src="' + item.mapa_url + '" style="width:100%; max-height:300px; object-fit:contain; border-radius:2px; cursor:pointer;" onclick="window.open(\'' + item.mapa_url + '\',\'_blank\')">';
-        mapaHtml += '</div>';
-      }
+    articulos.forEach(articulo => {
+        const tarjeta = document.createElement('div');
+        tarjeta.className = 'tarjeta-premium-v3';
+        tarjeta.style.cssText = 'background:#fff; border:1px solid #d8d3c4; padding:20px; margin-bottom:20px; border-radius:4px;';
+        
+        // Construimos el HTML de la tarjeta de forma segura
+        let htmlContenido = '';
+        htmlContenido += '<div style="display:flex; align-items:center; gap:12px; margin-bottom:12px;">';
+        htmlContenido += '  <img src="' + (articulo.imagen_url || 'https://placehold.co') + '" style="width:40px; height:40px; object-fit:contain;" onerror="this.src=\'https://placehold.co\'"/>';
+        htmlContenido += '  <h3 style="margin:0; font-family:\'Source Serif 4\', serif; color:#1b2a3a;">' + articulo.titulo + '</h3>';
+        htmlContenido += '</div>';
+        htmlContenido += '<p style="font-size:14px; color:#4a5568; line-height:1.6; text-align:justify;">' + (articulo.resumen || '') + '</p>';
+        
+        // Bloque de enlaces para PDF y Mapa Conceptual
+        htmlContenido += '<div style="margin: 12px 0; font-size:13px; display:flex; gap:15px;">';
+        if (articulo.pdf_url) {
+            htmlContenido += '  <a href="' + articulo.pdf_url + '" target="_blank" style="color:#2b6cb0; text-decoration:none; font-weight:600;">📄 Ver Reporte PDF</a>';
+        }
+        if (articulo.mapa_url) {
+            htmlContenido += '  <a href="' + articulo.mapa_url + '" target="_blank" style="color:#2b6cb0; text-decoration:none; font-weight:600;">🗺️ Ver Mapa Conceptual</a>';
+        }
+        htmlContenido += '</div>';
+        
+        // Contenedor para inyectar el Power BI
+        htmlContenido += '<div class="powerbi-container" id="bi-' + articulo.id + '" style="margin-top:15px; background:#f7fafc; border-radius:4px;"></div>';
+        
+        tarjeta.innerHTML = htmlContenido;
+        contenedor.appendChild(tarjeta);
 
-      let descripcionLarga = item.contenido || 'Sin descripción detallada.';
-
-      htmlFinal += '<article class="card" style="background:#fff; border:1px solid #d8d3c4; border-radius:4px; padding:24px; margin-bottom:24px; display:flex; flex-direction:column; gap:16px;">';
-      htmlFinal += '  <div style="display:flex; justify-content:space-between; align-items:flex-start; gap:14px; border-bottom:1px solid #e7efe9; padding-bottom:12px;">';
-      htmlFinal += '    <div style="display:flex; align-items:center; gap:14px;">' + iconoHtml + '<h3 style="font-family:\'Source Serif 4\', serif; font-size:18px; margin:0; font-weight:700; color:#1b2a3a;">' + item.titulo + '</h3></div>';
-      htmlFinal += '    <span style="font-family:\'IBM Plex Mono\', monospace; font-size:11px; color:#8f6538; background:#f1efe7; padding:4px 10px; border-radius:3px; font-weight:600; white-space:nowrap;">MODELO INTERACTIVO</span>';
-      htmlFinal += '  </div>';
-      htmlFinal += '  <div style="color:#4a5a68; font-size:14px; line-height:1.6; white-space:pre-line;">' + descripcionLarga + '</div>';
-      
-      // Acoplamos el mapa conceptual abajo del texto de análisis
-      htmlFinal += mapaHtml;
-
-      htmlFinal += '  <div style="margin-top:auto; border-top:1px solid #f1efe7; padding-top:14px; display:flex; justify-content:flex-end;">';
-      htmlFinal += '    <a href="' + item.pdf_url + '" class="btn primary" style="text-decoration:none; display:inline-block; font-size:13px; font-weight:600; padding:10px 18px; background:#1b2a3a; color:#fafaf6; border-radius:3px;">Abrir Simulador Interactivo 🚀</a>';
-      htmlFinal += '  </div>';
-      htmlFinal += '</article>';
+        // Si el registro incluye un iframe válido en la columna 'contenido', lo inyectamos de forma activa
+        if (articulo.contenido && articulo.contenido.includes('<iframe')) {
+            const biDiv = document.getElementById('bi-' + articulo.id);
+            if (biDiv) {
+                biDiv.innerHTML = articulo.contenido;
+                const iframe = biDiv.querySelector('iframe');
+                if (iframe) {
+                    iframe.style.width = '100%';
+                    iframe.style.height = '450px';
+                    iframe.style.border = '0';
+                }
+            }
+        }
     });
-
-    contenedor.innerHTML = htmlFinal;
-
-  } catch (err) {
-    console.error(err);
-    contenedor.innerHTML = '<div class="card"><p style="color:#a13d2e;">❌ Error al conectar con el catálogo cloud.</p></div>';
-  }
-});
+}
 

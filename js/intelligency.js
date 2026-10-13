@@ -1,8 +1,7 @@
 // 📊 js/intelligency.js — MOTOR RECEPTOR DINÁMICO (V3.4)
 
-document.addEventListener('DOMContentLoaded', () => {
-    cargarTarjetasIntelligency();
-});
+// Ejecución inmediata: Soluciona el problema de la pantalla en blanco
+cargarTarjetasIntelligency();
 
 async function cargarTarjetasIntelligency() {
     const contenedor = document.querySelector('.cards');

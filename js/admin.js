@@ -5,7 +5,7 @@ const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
 const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
 
 // 2. Luego creas el cliente UNA SOLA VEZ con la configuración limpia
-const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
   auth: {
     persistSession: false,
     autoRefreshToken: false

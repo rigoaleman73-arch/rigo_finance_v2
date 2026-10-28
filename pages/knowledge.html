@@ -1,1 +1,145 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Knowledge | Rigo Finance</title><link rel="stylesheet" href="../css/global.css"></head><body><header id="site-header"></header><main class="section"><span class="eyebrow">KNOWLEDGE</span><h1>Knowledge</h1><p>Sección de Rigo Finance preparada para contenido administrable.</p><div class='cards'><article><h3>Contenido preparado</h3><p>Esta sección queda lista para crecer con contenido dinámico.</p></article></div></main><footer id="site-footer"></footer><script src="../js/navigation.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Knowledge Base | Rigo Finance</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    /* Estilos para la sección de Knowledge */
+    .knowledge-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 2rem;
+    }
+    .knowledge-card {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      transition: transform 0.2s ease, border-color 0.2s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .knowledge-card:hover {
+      transform: translateY(-5px);
+      border-color: #4CAF50; /* Color verde de tu marca */
+    }
+    .knowledge-card h3 {
+      margin-top: 0.5rem;
+      font-size: 1.25rem;
+      color: #fff;
+    }
+    .knowledge-card p {
+      color: #aaa;
+      font-size: 0.95rem;
+      flex-grow: 1;
+    }
+    .tag {
+      display: inline-block;
+      background: rgba(76, 175, 80, 0.15);
+      color: #4CAF50;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      width: fit-content;
+    }
+    .status-badge {
+      display: inline-block;
+      background: #ff9800;
+      color: #000;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      margin-top: 1rem;
+      width: fit-content;
+    }
+    /* Banner de Nova AI */
+    .nova-banner {
+      background: linear-gradient(135deg, #1e3c23 0%, #0a0a0a 100%);
+      border: 1px solid #4CAF50;
+      padding: 2.5rem;
+      border-radius: 12px;
+      text-align: center;
+      margin-top: 3rem;
+    }
+    .nova-banner h2 { margin-top: 0; color: #fff; }
+    .nova-banner p { color: #ccc; max-width: 600px; margin: 0 auto 1.5rem auto; }
+    .btn-primary {
+      display: inline-block;
+      background: #4CAF50;
+      color: #fff;
+      padding: 10px 24px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: background 0.2s;
+    }
+    .btn-primary:hover { background: #45a049; }
+  </style>
+</head>
+<body>
+  <header id="site-header"></header>
+  
+  <main class="section">
+    <span class="eyebrow">KNOWLEDGE BASE</span>
+    <h1>Artículos, Guías y Análisis Financiero</h1>
+    <p>Explora recursos técnicos sobre FP&A, NIIF (IFRS), modelado de datos y automatización. Un espacio diseñado para compartir conocimiento aplicable a los retos financieros actuales.</p>
+    
+    <!-- Cuadrícula de Artículos -->
+    <div class="knowledge-grid">
+      
+      <!-- Artículo 1 -->
+      <article class="knowledge-card">
+        <span class="tag">FP&A</span>
+        <h3>El impacto del EBITDA en la valuación de empresas</h3>
+        <p>Análisis profundo sobre cómo los ajustes no monetarios afectan los múltiplos de valuación y la toma de decisiones de inversión.</p>
+        <span class="status-badge">En redacción (Próximamente)</span>
+      </article>
+
+      <!-- Artículo 2 -->
+      <article class="knowledge-card">
+        <span class="tag">IFRS / NIIF</span>
+        <h3>NIIF 16: Automatización del cálculo de arrendamientos</h3>
+        <p>Cómo construir un modelo automatizado para el registro de pasivos por arrendamiento y su impacto en los estados financieros.</p>
+        <span class="status-badge">En redacción (Próximamente)</span>
+      </article>
+
+      <!-- Artículo 3 -->
+      <article class="knowledge-card">
+        <span class="tag">Business Intelligence</span>
+        <h3>Modelado Estrella (Star Schema) en Power BI</h3>
+        <p>Mejores prácticas para estructurar datos transaccionales y de nómina, optimizando el rendimiento de las medidas DAX.</p>
+        <span class="status-badge">Investigación</span>
+      </article>
+
+      <!-- Artículo 4 -->
+      <article class="knowledge-card">
+        <span class="tag">Automatización</span>
+        <h3>Integración de IA en reportes de Flujo de Efectivo</h3>
+        <p>El uso de asistentes virtuales (como Nova AI) para la proyección de escenarios financieros a 30, 60 y 90 días.</p>
+        <span class="status-badge">Ideación</span>
+      </article>
+
+    </div>
+
+    <!-- Llamado a la acción (Nova AI) -->
+    <div class="nova-banner">
+      <h2>¿No encuentras lo que buscas?</h2>
+      <p>Nuestro repositorio de artículos está en constante crecimiento. Mientras tanto, puedes consultar tus dudas técnicas directamente con nuestro asistente experto en finanzas.</p>
+      <a href="../pages/ai-lab.html" class="btn-primary">Consultar a Nova AI</a>
+    </div>
+
+  </main>
+  
+  <footer id="site-footer"></footer>
+  <script src="../js/navigation.js"></script>
+</body>
+</html>

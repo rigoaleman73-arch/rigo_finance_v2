@@ -1,1 +1,147 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Ai Lab | Rigo Finance</title><link rel="stylesheet" href="../css/global.css"></head><body><header id="site-header"></header><main class="section"><span class="eyebrow">AI LAB</span><h1>Ai Lab</h1><p>Sección de Rigo Finance preparada para contenido administrable.</p><div class='cards'><article><h3>Contenido preparado</h3><p>Esta sección queda lista para crecer con contenido dinámico.</p></article></div></main><footer id="site-footer"></footer><script src="../js/navigation.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>AI Lab & Financial Engineering | Rigo Finance</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    /* Estilos para la sección de AI Lab */
+    .ai-hero {
+      background: linear-gradient(135deg, #1e1e2f 0%, #0a0a0a 100%);
+      border: 1px solid #4a4a6a;
+      border-radius: 12px;
+      padding: 3rem 2rem;
+      text-align: center;
+      margin-bottom: 3rem;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.3);
+    }
+    .ai-hero h2 {
+      color: #fff;
+      font-size: 2rem;
+      margin-top: 0;
+    }
+    .ai-hero p {
+      color: #b0b0d0;
+      max-width: 700px;
+      margin: 0 auto 2rem auto;
+      font-size: 1.1rem;
+    }
+    .ai-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    .ai-card {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      transition: all 0.3s ease;
+      position: relative;
+    }
+    .ai-card:hover {
+      border-color: #8a2be2; /* Un tono morado/azul tecnológico */
+      transform: translateY(-5px);
+      box-shadow: 0 8px 25px rgba(138, 43, 226, 0.15);
+    }
+    .ai-card h3 {
+      margin-top: 0.5rem;
+      font-size: 1.25rem;
+      color: #fff;
+    }
+    .ai-card p {
+      color: #aaa;
+      font-size: 0.95rem;
+      flex-grow: 1;
+    }
+    
+    /* Iconos / Badges de Estado */
+    .lab-badge {
+      display: inline-block;
+      background: rgba(138, 43, 226, 0.15);
+      color: #b388ff;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: bold;
+      font-family: monospace;
+      border: 1px solid rgba(138, 43, 226, 0.3);
+      width: fit-content;
+    }
+    
+    .btn-neon {
+      display: inline-block;
+      background: transparent;
+      color: #b388ff;
+      border: 2px solid #b388ff;
+      padding: 10px 24px;
+      border-radius: 4px;
+      text-decoration: none;
+      font-weight: bold;
+      transition: all 0.3s ease;
+    }
+    .btn-neon:hover {
+      background: #b388ff;
+      color: #000;
+      box-shadow: 0 0 15px rgba(179, 136, 255, 0.5);
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header"></header>
+  
+  <main class="section">
+    <span class="eyebrow" style="color: #b388ff;">AI LAB</span>
+    <h1>Inteligencia Artificial aplicada a Finanzas</h1>
+    <p>Espacio de experimentación, prototipado y desarrollo de soluciones que combinan Modelos de Lenguaje (LLMs) con análisis financiero tradicional. Aquí es donde el futuro del FP&A se vuelve tangible.</p>
+    
+    <!-- SECCIÓN DESTACADA: NOVA AI -->
+    <div class="ai-hero">
+      <h2>🤖 Nova AI: El Asistente Financiero</h2>
+      <p>Mi proyecto insignia. Un agente conversacional entrenado con lógica de FP&A, NIIF y análisis de datos. Diseñado para interpretar consultas en lenguaje natural y ejecutar cálculos financieros complejos en tiempo real.</p>
+      <!-- Enlaza esto al botón real de Nova en tu web si tienes uno -->
+      <a href="#" class="btn-neon">Interactuar con Nova AI</a>
+    </div>
+
+    <!-- Cuadrícula de Experimentos / Proyectos de IA -->
+    <div class="ai-grid">
+      
+      <!-- Proyecto 1 -->
+      <article class="ai-card">
+        <span class="lab-badge">EXPERIMENTO_01</span>
+        <h3>Prompt Engineering para FP&A</h3>
+        <p>Diseño de *System Prompts* estructurados para forzar a los LLMs a actuar como Analistas Senior. Incluye reglas de negocio, formatos de salida estrictos y mitigación de alucinaciones en cálculos críticos.</p>
+      </article>
+
+      <!-- Proyecto 2 -->
+      <article class="ai-card">
+        <span class="lab-badge">EXPERIMENTO_02</span>
+        <h3>Análisis de Variaciones (Variance AI)</h3>
+        <p>Prototipo de script en Python que utiliza la API de OpenAI/Groq para leer estados financieros en CSV, detectar desviaciones presupuestales mayores al 10% y redactar un resumen ejecutivo automático.</p>
+      </article>
+
+      <!-- Proyecto 3 -->
+      <article class="ai-card">
+        <span class="lab-badge">EXPERIMENTO_03</span>
+        <h3>Modelos Predictivos de Flujo de Caja</h3>
+        <p>Exploración de modelos de Machine Learning (Scikit-learn) para la proyección de flujos operativos basados en datos históricos, estacionalidad y variables macroeconómicas.</p>
+      </article>
+
+      <!-- Proyecto 4 -->
+      <article class="ai-card">
+        <span class="lab-badge">EN_DESARROLLO</span>
+        <h3>Extracción Inteligente de Datos (OCR + LLM)</h3>
+        <p>Pipeline experimental para la extracción automática de datos de facturas y estados de cuenta en PDF, utilizando visión artificial y modelos de lenguaje para estructurar la información contable.</p>
+      </article>
+
+    </div>
+
+  </main>
+  
+  <footer id="site-footer"></footer>
+  <script src="../js/navigation.js"></script>
+</body>
+</html>

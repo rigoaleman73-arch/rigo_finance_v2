@@ -1,1 +1,138 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Bi | Rigo Finance</title><link rel="stylesheet" href="../css/global.css"></head><body><header id="site-header"></header><main class="section"><span class="eyebrow">BI</span><h1>Bi</h1><p>Sección de Rigo Finance preparada para contenido administrable.</p><div class='cards'><article><h3>Contenido preparado</h3><p>Esta sección queda lista para crecer con contenido dinámico.</p></article></div></main><footer id="site-footer"></footer><script src="../js/navigation.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Business Intelligence & Data Modeling | Rigo Finance</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    /* Estilos para la sección de BI */
+    .bi-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem; }
+    .bi-card { background: #1a1a1a; padding: 1.5rem; border-radius: 8px; border: 1px solid #333; }
+    
+    /* Estilos para las imágenes y el efecto de zoom */
+    .bi-card img { 
+      width: 100%; 
+      border-radius: 4px; 
+      margin-top: 1rem; 
+      border: 1px solid #444; 
+      background: #fff; 
+      cursor: pointer; /* Muestra la manito para indicar que se puede hacer clic */
+      transition: transform 0.2s ease, filter 0.2s ease;
+    }
+    .bi-card img:hover {
+      transform: scale(1.02); /* Pequeño efecto al pasar el ratón */
+      filter: brightness(1.1);
+    }
+
+    .bi-iframe-container { width: 100%; height: 600px; margin-top: 1rem; background: #fff; border-radius: 4px; overflow: hidden; }
+    .bi-iframe-container iframe { width: 100%; height: 100%; border: none; }
+    
+    @media (max-width: 768px) { .bi-grid { grid-template-columns: 1fr; } }
+
+    /* --- ESTILOS DEL MODAL (ZOOM) --- */
+    .image-modal {
+      display: none; /* Oculto por defecto */
+      position: fixed;
+      z-index: 9999;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.85); /* Fondo oscuro semitransparente */
+      backdrop-filter: blur(5px);
+      justify-content: center;
+      align-items: center;
+      cursor: zoom-out; /* Indica que al hacer clic se cierra */
+    }
+    .image-modal.active {
+      display: flex;
+    }
+    .image-modal img {
+      max-width: 95%;
+      max-height: 95vh;
+      border-radius: 8px;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header"></header>
+  
+  <main class="section">
+    <span class="eyebrow">Business Intelligence</span>
+    <h1>Del dato crudo a la decisión estratégica</h1>
+    <p>No solo creo visualizaciones; diseño ecosistemas de datos robustos. Desde el modelado relacional (Star Schema) hasta la interactividad en la nube, construyo herramientas que transforman transacciones en información ejecutiva para FP&A.</p>
+    
+    <div class="bi-grid">
+      
+      <!-- SECCIÓN 1: EL MODELO DE DATOS (Power BI) -->
+      <article class="bi-card">
+        <h3>1. Data Architecture & Modeling (Power BI)</h3>
+        <p>El verdadero poder de un reporte reside en su backend. Aquí documento el esquema relacional que unifica transacciones contables (GL), nómina y centros de costo, optimizando el rendimiento de las medidas DAX.</p>
+        <!-- Añadimos la clase 'zoomable' a las imágenes -->
+        <img src="../assets/images/Estructura_PowerBI.png" alt="Modelo de datos en Power BI" class="zoomable">
+      </article>
+
+      <!-- SECCIÓN 2: EL PANEL DE POWER BI -->
+      <article class="bi-card">
+        <h3>2. Dashboard Ejecutivo (Power BI)</h3>
+        <p>Visualización final orientada a la toma de decisiones. Este panel consume el modelo anterior para presentar indicadores clave (KPIs) de rentabilidad y flujo de caja de forma intuitiva.</p>
+        <!-- Añadimos la clase 'zoomable' a las imágenes -->
+        <img src="../assets/images/Pantalla_de_PowerBI.png" alt="Dashboard en Power BI" class="zoomable">
+      </article>
+
+      <!-- SECCIÓN 3: DASHBOARD INTERACTIVO (Looker Studio) -->
+      <article class="bi-card" style="grid-column: 1 / -1;">
+        <h3>3. Interactive Dashboards (Looker Studio)</h3>
+        <p>Despliegue de tableros en la nube conectados a Google Sheets. Esta arquitectura permite realizar análisis "What-If" y simulaciones de escenarios en tiempo real, demostrando agilidad en la creación de reportes ejecutivos sin depender de licencias adicionales.</p>
+        <div class="bi-iframe-container">
+          <iframe 
+            src="https://datastudio.google.com/embed/reporting/7a95eb0d-85e3-4e3c-b794-b57969d6c65e/page/omF7F" 
+            allowfullscreen>
+          </iframe>
+        </div>
+      </article>
+
+    </div>
+
+    <!-- SECCIÓN 4: CONCLUSIÓN -->
+    <div class="cards" style="margin-top: 2rem;">
+      <article>
+        <h3>Impacto en FP&A</h3>
+        <p>Integración total: extracción de datos, limpieza, modelado y visualización. Mis dashboards no solo muestran qué pasó, sino que están diseñados para responder <em>por qué pasó</em> y <em>qué podemos hacer al respecto</em>.</p>
+      </article>
+    </div>
+  </main>
+  
+  <footer id="site-footer"></footer>
+  <script src="../js/navigation.js"></script>
+
+  <!-- CONTENEDOR DEL MODAL (Oculto por defecto) -->
+  <div id="zoomModal" class="image-modal">
+    <img id="zoomedImage" src="" alt="Zoom de imagen">
+  </div>
+
+  <!-- SCRIPT PARA LA FUNCIONALIDAD DE ZOOM -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function() {
+      const modal = document.getElementById("zoomModal");
+      const zoomedImage = document.getElementById("zoomedImage");
+      const zoomableImages = document.querySelectorAll(".zoomable");
+
+      // Al hacer clic en una imagen, la mostramos en el modal
+      zoomableImages.forEach(img => {
+        img.addEventListener("click", function() {
+          zoomedImage.src = this.src;
+          modal.classList.add("active");
+        });
+      });
+
+      // Al hacer clic en cualquier parte del modal, lo cerramos
+      modal.addEventListener("click", function() {
+        modal.classList.remove("active");
+      });
+    });
+  </script>
+</body>
+</html>

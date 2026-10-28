@@ -1,1 +1,282 @@
-<!doctype html><html lang="es"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Tickets | Rigo Finance</title><link rel="stylesheet" href="../css/global.css"></head><body><header id="site-header"></header><main class="section"><span class="eyebrow">TICKETS</span><h1>Tickets</h1><p>Sección de Rigo Finance preparada para contenido administrable.</p><div class='cards'><article><h3>Contenido preparado</h3><p>Esta sección queda lista para crecer con contenido dinámico.</p></article></div></main><footer id="site-footer"></footer><script src="../js/navigation.js"></script></body></html>
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Soporte & Consultas | Rigo Finance</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <style>
+    /* Estilos para la sección de Tickets */
+    .tickets-wrapper {
+      display: grid;
+      grid-template-columns: 1fr 1.2fr;
+      gap: 3rem;
+      margin-top: 2rem;
+      align-items: start;
+    }
+
+    /* --- Columna Izquierda: Perfil Profesional --- */
+    .profile-card {
+      background: linear-gradient(145deg, #1a1a1a, #111);
+      border: 1px solid #333;
+      border-top: 4px solid #4CAF50;
+      border-radius: 8px;
+      padding: 2.5rem;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+      position: sticky;
+      top: 100px; /* Para que se quede fijo si hacen scroll */
+    }
+    .profile-header {
+      display: flex;
+      align-items: center;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    .profile-avatar {
+      width: 80px;
+      height: 80px;
+      border-radius: 50%;
+      background: #2a2a2a;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 2rem;
+      font-weight: bold;
+      color: #4CAF50;
+      border: 2px solid #4CAF50;
+    }
+    .profile-title h2 {
+      margin: 0 0 5px 0;
+      color: #fff;
+      font-size: 1.4rem;
+    }
+    .profile-title span {
+      color: #4CAF50;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .profile-text {
+      color: #aaa;
+      font-size: 0.95rem;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+      text-align: justify;
+    }
+    .profile-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+    }
+    .profile-tags span {
+      background: rgba(76, 175, 80, 0.1);
+      color: #4CAF50;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    .contact-direct {
+      border-top: 1px solid #333;
+      padding-top: 1.5rem;
+      font-size: 0.9rem;
+      color: #ddd;
+    }
+    .contact-direct a {
+      color: #4CAF50;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    /* --- Columna Derecha: Formulario de Tickets --- */
+    .ticket-form-container {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 2.5rem;
+    }
+    .ticket-form-container h2 {
+      color: #fff;
+      margin-top: 0;
+      margin-bottom: 0.5rem;
+      font-size: 1.5rem;
+    }
+    .ticket-form-container p {
+      color: #aaa;
+      font-size: 0.95rem;
+      margin-bottom: 2rem;
+    }
+
+    .form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+    }
+    .form-group {
+      margin-bottom: 1.2rem;
+    }
+    .form-group label {
+      display: block;
+      color: #ddd;
+      font-size: 0.85rem;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+    .form-control {
+      width: 100%;
+      padding: 12px;
+      background: #0a0a0a;
+      border: 1px solid #444;
+      border-radius: 4px;
+      color: #fff;
+      font-family: inherit;
+      font-size: 0.95rem;
+      transition: border-color 0.3s;
+      box-sizing: border-box;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: #4CAF50;
+    }
+    textarea.form-control {
+      resize: vertical;
+      min-height: 120px;
+    }
+    
+    /* Colores para las prioridades */
+    .priority-high { color: #ff5252; font-weight: bold; }
+    .priority-med { color: #ffb300; font-weight: bold; }
+    .priority-low { color: #4CAF50; font-weight: bold; }
+
+    .btn-ticket {
+      width: 100%;
+      background: #4CAF50;
+      color: #fff;
+      border: none;
+      padding: 14px;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background 0.3s;
+      margin-top: 1rem;
+    }
+    .btn-ticket:hover { background: #45a049; }
+
+    @media (max-width: 900px) {
+      .tickets-wrapper { grid-template-columns: 1fr; }
+      .profile-card { position: static; }
+      .form-row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header id="site-header"></header>
+  
+  <main class="section">
+    <span class="eyebrow">SOPORTE & CONSULTAS</span>
+    <h1>Centro de Atención</h1>
+    <p>¿Tienes una duda técnica, necesitas asistencia con un modelo financiero o deseas discutir una oportunidad profesional? Abre un ticket y te responderé a la brevedad.</p>
+    
+    <div class="tickets-wrapper">
+      
+      <!-- LADO IZQUIERDO: PERFIL DEL CONSULTOR -->
+      <aside class="profile-card">
+        <div class="profile-header">
+          <div class="profile-avatar">RA</div>
+          <div class="profile-title">
+            <h2>C.P. Rigoberto Aleman</h2>
+            <span>Contador Sr. & FP&A Leader</span>
+          </div>
+        </div>
+        
+        <p class="profile-text">
+          Contador Público titulado (UNAM, Mención Honorífica) con más de 15 años de trayectoria liderando las áreas de Contabilidad General, Costos, Cuentas por Pagar y Análisis Financiero (FP&A) en corporativos globales como CBRE, Telefónica y Grupo Sanborns.
+        </p>
+        <p class="profile-text">
+          Especialista en asegurar el cumplimiento fiscal (ISR, IVA, DIOT, Contabilidad Electrónica) y la emisión de Estados Financieros bajo normativas NIF e IFRS. Experto en la transformación digital de las finanzas mediante la automatización de procesos contables complejos y el diseño de modelos y dashboards financieros avanzados.
+        </p>
+        
+        <div class="profile-tags">
+          <span>NIF / IFRS</span>
+          <span>SAP</span>
+          <span>Oracle</span>
+          <span>Excel (VBA)</span>
+          <span>Power Query</span>
+          <span>Power BI</span>
+          <span>FP&A</span>
+        </div>
+
+        <div class="contact-direct">
+          <strong>Contacto Directo:</strong><br>
+          <a href="mailto:r_aleman_guido@yahoo.com.mx">r_aleman_guido@yahoo.com.mx</a>
+        </div>
+      </aside>
+
+      <!-- LADO DERECHO: FORMULARIO DE TICKET -->
+      <section class="ticket-form-container">
+        <h2>Abrir un Ticket</h2>
+        <p>Los campos marcados con (*) son obligatorios. Por favor, sé lo más específico posible.</p>
+
+        <!-- 
+          CONEXIÓN AL SERVIDOR:
+          Para conectar esto a tu backend en Render, simplemente añade el endpoint 
+          en el atributo action (ej. action="/api/tickets" method="POST").
+          Si usas un servicio externo (Formspree, EmailJS), coloca la URL aquí.
+        -->
+        <form action="#" method="POST" id="ticketForm">
+          
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ticket-name">Nombre Completo *</label>
+              <input type="text" id="ticket-name" name="nombre" class="form-control" placeholder="Tu nombre" required>
+            </div>
+            <div class="form-group">
+              <label for="ticket-email">Correo Electrónico *</label>
+              <input type="email" id="ticket-email" name="email" class="form-control" placeholder="tu@correo.com" required>
+            </div>
+          </div>
+
+          <div class="form-row">
+            <div class="form-group">
+              <label for="ticket-category">Categoría del Ticket *</label>
+              <select id="ticket-category" name="categoria" class="form-control" required>
+                <option value="" disabled selected>Selecciona...</option>
+                <option value="consulta-tecnica">Consulta Técnica / Soporte</option>
+                <option value="revision-financiera">Revisión de Modelo Financiero</option>
+                <option value="automatizacion">Automatización de Reportes</option>
+                <option value="reclutamiento">Oportunidad Laboral / Entrevista</option>
+                <option value="otro">Otro Asunto</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="ticket-priority">Prioridad *</label>
+              <select id="ticket-priority" name="prioridad" class="form-control" required>
+                <option value="baja" class="priority-low">Baja - Informativa</option>
+                <option value="media" class="priority-med" selected>Media - Operativa</option>
+                <option value="alta" class="priority-high">Alta - Urgente / Bloqueante</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-group">
+            <label for="ticket-subject">Asunto *</label>
+            <input type="text" id="ticket-subject" name="asunto" class="form-control" placeholder="Resumen breve del problema o consulta" required>
+          </div>
+
+          <div class="form-group">
+            <label for="ticket-desc">Descripción Detallada *</label>
+            <textarea id="ticket-desc" name="descripcion" class="form-control" placeholder="Describe tu situación, incluye enlaces o detalles técnicos relevantes..." required></textarea>
+          </div>
+
+          <button type="submit" class="btn-ticket">Enviar Ticket</button>
+        </form>
+      </section>
+
+    </div>
+  </main>
+  
+  <footer id="site-footer"></footer>
+  <script src="../js/navigation.js"></script>
+</body>
+</html>

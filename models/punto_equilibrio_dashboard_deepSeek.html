@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Punto de Equilibrio + Chatbot</title>
+<style>
+:root{--bg:#f6f7f9;--card:#fff;--tx:#1c2430;--mu:#6b7686;--ac:#0f766e;--bd:#e2e6ec;--rd:#c2410c;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#12161c;--card:#1b212b;--tx:#e8ecf2;--mu:#93a0b3;--ac:#2dd4bf;--bd:#2c3542;--rd:#fb923c}}
+:root[data-theme="dark"]{--bg:#12161c;--card:#1b212b;--tx:#e8ecf2;--mu:#93a0b3;--ac:#2dd4bf;--bd:#2c3542;--rd:#fb923c}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.4 system-ui,-apple-system,Segoe UI,sans-serif;padding:16px}
+body.tour-active{overflow:hidden}
+.tourbtn{border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:12px;padding:2px 12px;cursor:pointer;font-size:12px;margin-left:8px}
+.tourhi{outline:3px solid #7c3aed;outline-offset:2px;border-radius:8px}
+.w{max-width:760px;margin:auto}
+h1{font-size:20px;margin:0 0 12px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:12px}
+.mode{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mode button,.st button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:6px 12px;cursor:pointer;font-size:14px}
+.mode button.on{background:var(--ac);color:#fff;border-color:var(--ac)}
+.mode input{width:90px;padding:6px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx)}
+.f{margin-bottom:14px}
+.f:last-child{margin-bottom:0}
+.r{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:4px}
+.r label{font-weight:600}
+.st{display:flex;gap:4px;align-items:center}
+.st input{width:110px;padding:6px;text-align:right;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx)}
+input[type=range]{width:100%;accent-color:var(--ac)}
+.k{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.k div{border:1px solid var(--bd);border-radius:10px;padding:10px}
+.k span{display:block;color:var(--mu);font-size:12px}
+.k b{font-size:18px}
+.big{border-color:var(--ac)!important}.big b{color:var(--ac);font-size:22px}
+.svgw{overflow-x:auto}
+/* ✅ FIX 9: SVG con display:block + min-height para que no colapsen */
+svg{display:block;width:100%;height:auto;min-width:420px;overflow:visible}
+#ch{min-height:280px}
+#c2,#c3,#c4{min-height:220px}
+#c5{min-height:180px}
+#msgs{height:230px;overflow-y:auto;border:1px solid var(--bd);border-radius:10px;padding:8px;margin-bottom:8px;display:flex;flex-direction:column;gap:6px}
+.m{max-width:85%;padding:7px 10px;border-radius:10px;white-space:pre-wrap;font-size:14px}
+.m.u{align-self:flex-end;background:var(--ac);color:#fff}
+.m.b{align-self:flex-start;background:var(--bg);border:1px solid var(--bd)}
+.cin{display:flex;gap:6px}
+.cin input{flex:1;padding:8px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font-size:15px}
+.cin button,.chips button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:8px;padding:6px 12px;cursor:pointer}
+.chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}.chips button{font-size:12px;border-radius:14px}
+.note{color:var(--mu);font-size:12px;margin-top:6px}
+.w{max-width:1280px}
+.top{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:10px}.top h1{margin:0}.top span{color:var(--mu);font-size:12px}
+.kp{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:10px;margin-bottom:12px}
+.kc{background:var(--card);border:1px solid var(--bd);border-radius:8px;padding:10px 12px;display:flex;align-items:center;justify-content:space-between;gap:6px;box-shadow:0 1px 3px rgba(0,0,0,.08)}
+.kc small{color:var(--mu);font-size:11px;display:block}.kc b{font-size:19px}.kc i{font-size:26px;font-style:normal}
+@keyframes fl{0%{background:rgba(43,46,214,.22)}100%{background:var(--card)}}.kc.fl{animation:fl .9s}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(3,minmax(0,1fr));grid-template-areas:"gc gm gm" "gb gu go" "gb gr gr" "gs gs gs"}
+.gc{grid-area:gc}.gm{grid-area:gm}.gb{grid-area:gb}.gu{grid-area:gu}.go{grid-area:go}.gr{grid-area:gr}.gs{grid-area:gs}
+@media(max-width:980px){.grid{grid-template-columns:minmax(0,1fr);grid-template-areas:"gc" "gm" "gb" "gu" "go" "gr" "gs"}}
+.sem{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;padding:3px 10px;border-radius:12px;margin-left:auto}
+.animbtn{display:none;margin:10px 0 4px;background:#7c3aed;color:#fff;border:none;border-radius:8px;padding:8px 16px;font-weight:700;font-size:13px;cursor:pointer;box-shadow:0 2px 6px rgba(124,58,237,.35)}
+.animbtn:hover{background:#6d28d9}
+.cd{background:var(--card);border:1px solid var(--bd);border-radius:8px;box-shadow:0 1px 3px rgba(0,0,0,.08);overflow:hidden;color:var(--tx)}
+.ct{background:#2b2ed6;color:#fff;font-weight:700;font-size:13px;padding:6px 10px;display:flex;justify-content:center;align-items:center;gap:10px}
+.cb{padding:10px;overflow-x:auto}
+.cd svg{min-width:0}.gm svg{min-width:520px}
+#msgs{height:280px}
+.tg{border:1px solid rgba(255,255,255,.6);background:transparent;color:#fff;border-radius:12px;padding:2px 10px;cursor:pointer;font-size:12px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap;margin-top:10px}
+.tabs button,.ph button{border:1px solid var(--bd);background:var(--card);color:var(--tx);border-radius:14px;padding:4px 10px;cursor:pointer;font-size:12px}
+.tabs button.on{background:#2b2ed6;color:#fff;border-color:#2b2ed6}
+.ph{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;padding:8px;border:1px dashed var(--bd);border-radius:8px}
+.mode{margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="w" id="stage" style="transform-origin:0 0;will-change:transform">
+<div class="top"><h1>⚖️ Panel de Punto de Equilibrio</h1><span>Escribe o habla con el asistente · todo corre en tu navegador</span><button id="tourBtn" class="animbtn" style="display:inline-block;margin:0 0 0 4px">🎬 Recorrido guiado</button><span id="semtop" class="sem"></span></div>
+<div class="kp" id="kp"></div>
+<div class="grid">
+<div class="cd gc"><div class="ct">Controles</div><div class="cb">
+<div class="mode"><b>Botones ±:</b><button id="mP" class="on">Porcentaje %</button><button id="mI">Importe directo</button><span>Paso:</span><input id="paso" type="number" value="5" min="0" step="any"></div>
+<div id="ctl"></div></div></div>
+<div class="cd gm"><div class="ct">Punto de equilibrio</div><div class="cb"><svg id="ch" viewBox="0 0 640 300"></svg><button id="animBtn2" class="animbtn">▶ Animar</button></div></div>
+<div class="cd gb"><div class="ct">🤖 Asistente <button id="voz" class="tg">🔊 Voz ON</button></div><div class="cb">
+<div id="msgs"></div>
+<div class="cin"><input id="ci" placeholder="Ej: sube el precio 10%" autocomplete="off"><button id="mic" title="Hablar">🎤</button><button id="cs">Enviar</button></div>
+<div class="tabs" id="tabs"></div><div class="ph" id="ph"></div>
+<button id="animBtn" class="animbtn">▶ Animar</button>
+<div id="chips" style="display:none"></div></div></div>
+<div class="cd gu"><div class="ct">Utilidad vs unidades</div><div class="cb"><svg id="c2" viewBox="0 0 400 240"></svg></div></div>
+<div class="cd go"><div class="ct">Estructura de costos</div><div class="cb"><svg id="c3" viewBox="0 0 400 240"></svg></div></div>
+<div class="cd gr"><div class="ct">Ingresos vs costos vs utilidad</div><div class="cb"><svg id="c4" viewBox="0 0 400 240"></svg></div></div>
+<div class="cd gs"><div class="ct">Sensibilidad del punto de equilibrio (±10% por variable)</div><div class="cb"><svg id="c5" viewBox="0 0 800 190"></svg></div></div>
+</div>
+<div id="res" style="display:none"></div>
+</div>
+
+<script>
+var fmt=function(n){return isFinite(n)?n.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:2}):'—'};
+var num=function(n){return isFinite(n)?n.toLocaleString('es-MX',{maximumFractionDigits:1}):'—'};
+var campos=[
+ {id:'precio',t:'Precio de Venta (por unidad)',v:100,min:0,max:500,s:1},
+ {id:'unidades',t:'Unidades vendidas',v:1000,min:0,max:5000,s:10},
+ {id:'cf',t:'Costos Fijos (total)',v:30000,min:0,max:200000,s:500},
+ {id:'cv',t:'Costos Variables (por unidad)',v:60,min:0,max:500,s:1}
+];
+var modo='p';
+var S={};
+var ctl=document.getElementById('ctl');
+campos.forEach(function(c){
+  S[c.id]=c.v;
+  var d=document.createElement('div');d.className='f';
+  d.innerHTML='<div class="r"><label>'+c.t+'</label><div class="st"><button data-a="-">−</button><input type="number" step="any" id="n_'+c.id+'"><button data-a="+">+</button></div></div><input type="range" id="s_'+c.id+'" min="'+c.min+'" max="'+c.max+'" step="'+c.s+'">';
+  ctl.appendChild(d);
+  var rg=d.querySelector('input[type=range]'),nb=d.querySelector('input[type=number]');
+  rg.oninput=function(){set(c,parseFloat(rg.value))};
+  nb.oninput=function(){set(c,parseFloat(nb.value)||0,true)};
+  d.querySelectorAll('button').forEach(function(b){b.onclick=function(){
+    var p=parseFloat(document.getElementById('paso').value)||0;
+    var delta=modo==='p'?S[c.id]*p/100:p;
+    set(c,S[c.id]+(b.dataset.a==='+'?delta:-delta),true);
+  }});
+});
+function set(c,val,fromNum){
+  if(typeof pararAnim==='function')pararAnim();
+  /* ✅ FIX 1: rechaza NaN/undefined antes de guardar */
+  if(typeof val!=='number'||!isFinite(val))val=0;
+  val=Math.max(0,Math.round(val*100)/100);
+  S[c.id]=val;
+  var rg=document.getElementById('s_'+c.id);
+  if(val>+rg.max)rg.max=Math.ceil(val*1.5);
+  rg.value=val;
+  var nb=document.getElementById('n_'+c.id);
+  if(!fromNum||document.activeElement!==nb)nb.value=val;
+  calc();
+}
+document.getElementById('mP').onclick=function(){modo='p';this.classList.add('on');document.getElementById('mI').classList.remove('on');document.getElementById('paso').value=5};
+document.getElementById('mI').onclick=function(){modo='i';this.classList.add('on');document.getElementById('mP').classList.remove('on');document.getElementById('paso').value=10};
+
+function calc(){
+  var P=S.precio,U=S.unidades,CF=S.cf,CV=S.cv;
+  var mc=P-CV,peU=mc>0?CF/mc:Infinity,peD=peU*P;
+  var ing=P*U,ct=CF+CV*U,ut=ing-ct;
+  var ms=U>0&&isFinite(peU)?(U-peU)/U*100:NaN;
+  var items=[
+   ['Margen de contribución / unidad',fmt(mc)],
+   ['Ingresos actuales',fmt(ing)],
+   ['Costos totales',fmt(ct)],
+   ['Utilidad actual',fmt(ut)],
+   ['Margen de seguridad',isFinite(ms)?num(ms)+' %':'—']
+  ];
+  var h='<div class="big"><span>Punto de equilibrio (unidades)</span><b>'+(mc>0?num(peU):'Sin equilibrio (precio ≤ costo variable)')+'</b></div>'+
+        '<div class="big"><span>Punto de equilibrio (importe)</span><b>'+(mc>0?fmt(peD):'—')+'</b></div>';
+  items.forEach(function(i){h+='<div><span>'+i[0]+'</span><b>'+i[1]+'</b></div>'});
+  document.getElementById('res').innerHTML=h;
+  if(typeof dibuja==='function')dibuja(P,CF,CV,U,peU);
+}
+function dibujaSimple(P,CF,CV,U,peU){
+  var xmax=Math.max(U,isFinite(peU)?peU:0,1)*1.4,ymax=Math.max(P*xmax,CF+CV*xmax,1);
+  var L=60,R=590,T=10,B=230;
+  var X=function(x){return L+(x/xmax)*(R-L)},Y=function(y){return B-(y/ymax)*(B-T)};
+  var s='<line x1="'+L+'" y1="'+B+'" x2="'+R+'" y2="'+B+'" stroke="currentColor" opacity=".3"/><line x1="'+L+'" y1="'+T+'" x2="'+L+'" y2="'+B+'" stroke="currentColor" opacity=".3"/>';
+  s+='<line x1="'+X(0)+'" y1="'+Y(0)+'" x2="'+X(xmax)+'" y2="'+Y(P*xmax)+'" stroke="#0f9d8a" stroke-width="2.5"/>';
+  s+='<line x1="'+X(0)+'" y1="'+Y(CF)+'" x2="'+X(xmax)+'" y2="'+Y(CF+CV*xmax)+'" stroke="#e2622b" stroke-width="2.5"/>';
+  s+='<line x1="'+X(0)+'" y1="'+Y(CF)+'" x2="'+X(xmax)+'" y2="'+Y(CF)+'" stroke="#8892a3" stroke-dasharray="4 4"/>';
+  if(isFinite(peU)&&peU<=xmax){s+='<circle cx="'+X(peU)+'" cy="'+Y(peU*P)+'" r="6" fill="#111" stroke="#fff" stroke-width="2"/><text x="'+(X(peU)+8)+'" y="'+(Y(peU*P)-8)+'" font-size="12" fill="currentColor">PE: '+num(peU)+' u</text>'}
+  s+='<line x1="'+X(U)+'" y1="'+T+'" x2="'+X(U)+'" y2="'+B+'" stroke="currentColor" opacity=".35" stroke-dasharray="2 4"/><text x="'+(X(U)-4)+'" y="'+(B+16)+'" font-size="11" text-anchor="end" fill="currentColor">Unidades actuales</text>';
+  s+='<text x="'+(L+6)+'" y="'+(T+12)+'" font-size="12" fill="#0f9d8a">— Ingresos</text><text x="'+(L+90)+'" y="'+(T+12)+'" font-size="12" fill="#e2622b">— Costos totales</text><text x="'+(L+200)+'" y="'+(T+12)+'" font-size="12" fill="#8892a3">- - Costos fijos</text>';
+  document.getElementById('ch').innerHTML=s;
+}
+function pe_cargarGuardado(){
+  try{if(location.hash&&location.hash.length>1){var h=JSON.parse(decodeURIComponent(location.hash.slice(1)));if(h&&typeof h.precio==='number'&&typeof h.unidades==='number'&&typeof h.cf==='number'&&typeof h.cv==='number')return h}}catch(e){}
+  try{var raw=localStorage.getItem('pe_dashboard_v1');if(raw){var p=JSON.parse(raw);if(p&&typeof p.precio==='number')return p}}catch(e){}
+  return null;
+}
+var pe_guardado=pe_cargarGuardado();
+campos.forEach(function(c){set(c,(pe_guardado&&typeof pe_guardado[c.id]==='number')?pe_guardado[c.id]:c.v)});
+</script>
+
+<script>
+var SIN=[
+ {k:'precio',t:['precio','precio de venta','venta','pvp']},
+ {k:'unidades',t:['unidades','piezas','volumen','cantidad','ventas en unidades']},
+ {k:'cf',t:['costos fijos','costo fijo','gastos fijos','fijos']},
+ {k:'cv',t:['costos variables','costo variable','variables','costo unitario']}
+];
+var TERMS=[];SIN.forEach(function(s){s.t.forEach(function(t){TERMS.push({k:s.k,t:t})})});
+var norm=function(s){return s.toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'')};
+function lev(a,b){var m=[],i,j;for(i=0;i<=a.length;i++){m[i]=[i]}for(j=1;j<=b.length;j++)m[0][j]=j;
+  for(i=1;i<=a.length;i++)for(j=1;j<=b.length;j++)m[i][j]=Math.min(m[i-1][j]+1,m[i][j-1]+1,m[i-1][j-1]+(a[i-1]===b[j-1]?0:1));
+  return m[a.length][b.length]}
+function campo(txt){
+  var w=txt.replace(/[^a-z0-9% ]/g,' ').split(/\s+/).filter(Boolean),best=null,g=[];
+  for(var i=0;i<w.length;i++){g.push(w[i]);if(i+1<w.length)g.push(w[i]+' '+w[i+1])}
+  g.forEach(function(x){
+    if(x.length<4||/^\d/.test(x))return;
+    TERMS.forEach(function(t){
+      var d=lev(x,t.t);if(d>Math.floor(t.t.length/5))return;
+      var sc=d/t.t.length;
+      if(!best||sc<best.s-1e-9||(Math.abs(sc-best.s)<1e-9&&x.length>best.l))best={k:t.k,s:sc,l:x.length};
+    });
+  });
+  return best?best.k:null;
+}
+var NOM={precio:'Precio de Venta',unidades:'Unidades',cf:'Costos Fijos',cv:'Costos Variables'};
+function C(k){return campos.filter(function(c){return c.id===k})[0]}
+function st(){var mc=S.precio-S.cv,pe=mc>0?S.cf/mc:Infinity;return{mc:mc,pe:pe,ut:S.precio*S.unidades-S.cf-S.cv*S.unidades}}
+function resumen(){var s=st();return s.mc>0?'Punto de equilibrio: '+num(s.pe)+' unidades ('+fmt(s.pe*S.precio)+').\nUtilidad actual: '+fmt(s.ut)+'.':'Con el precio actual no hay equilibrio: el precio debe ser mayor al costo variable.'}
+function cmd(t){
+  var n=t.match(/(\d+(?:\.\d+)?)\s*(%|por ?ciento)?/),val=n?parseFloat(n[1]):null,pct=n&&!!n[2];
+  var k=campo(t);
+  var m=t.match(/(?:ganar|utilidad(?: objetivo| de)?)\s*\$?\s*(\d+(?:\.\d+)?)/);
+  if(m){var mc=S.precio-S.cv;if(mc<=0)return 'Con este precio y costo variable no hay margen positivo.';var u=(S.cf+parseFloat(m[1]))/mc;TARGET={u:u,label:'Meta: '+fmt(parseFloat(m[1]))};REF=null;if(typeof dibuja==='function')dibuja();return 'Para ganar '+fmt(parseFloat(m[1]))+' necesitas vender '+num(u)+' unidades ('+fmt(u*S.precio)+' en ventas). Marcado en la gráfica.'}
+  if(/reinicia|restablece|reset/.test(t)){campos.forEach(function(c){set(c,c.v)});return 'Valores restablecidos.\n'+resumen()}
+  if(k&&val!==null){
+    var up=/\b(sube|subir|aumenta|incrementa|suma|sumale|mas)\b/.test(t),dn=/\b(baja|bajar|reduce|disminuye|resta|quita|menos)\b/.test(t),c=C(k),old=S[k],nv;
+    if(up||dn){var d=pct?old*val/100:val;nv=old+(up?d:-d)}else nv=pct?old*(1+val/100):val;
+    set(c,nv);
+    return NOM[k]+': '+num(old)+' → '+num(S[k])+'.\n'+resumen();
+  }
+  if(k&&val===null)return NOM[k]+' actual: '+num(S[k])+'.';
+  if(/equilibrio|breakeven|break even|resumen|estado|utilidad|ganancia/.test(t))return resumen();
+  if(/margen/.test(t)){var s=st();return 'Margen de contribución: '+fmt(s.mc)+' por unidad ('+num(S.precio?s.mc/S.precio*100:0)+' %).'}
+  if(/ayuda|help|que puedes|como/.test(t))return 'Puedo ajustar valores y responder preguntas:\n• "sube el precio 10%"\n• "baja costos variables 5"\n• "pon unidades en 1500"\n• "cuál es el punto de equilibrio"\n• "cuántas unidades para ganar 20000"\n• "reinicia"';
+  return 'No lo entendí. Escribe "ayuda" para ver ejemplos.';
+}
+function add(c,x){var d=document.createElement('div');d.className='m '+c;d.textContent=x;var b=document.getElementById('msgs');b.appendChild(d);b.scrollTop=b.scrollHeight}
+function send(txt){
+  txt=(txt||document.getElementById('ci').value).trim();if(!txt)return;
+  document.getElementById('ci').value='';add('u',txt);
+  var t=w2n(norm(txt)).replace(/(\d),(\d{3})/g,'$1$2'),parts=t.split(/\s+y\s+|;/),out=[];
+  parts.forEach(function(p){out.push(cmd(p))});
+  add('b',out.join('\n\n'));
+}
+document.getElementById('cs').onclick=function(){send()};
+document.getElementById('ci').addEventListener('keydown',function(e){if(e.key==='Enter'||e.keyCode===13){e.preventDefault();send()}});
+['Punto de equilibrio','Sube el precio 10%','Baja costos fijos 5000','Pon unidades en 1500','Unidades para ganar 20000','Ayuda'].forEach(function(x){var b=document.createElement('button');b.textContent=x;b.onclick=function(){send(x)};document.getElementById('chips').appendChild(b)});
+add('b','Hola, soy el asistente local. Puedes escribir o usar el micrófono 🎤.\nPuedo mover los valores del modelo y calcular el equilibrio. Escribe "ayuda" para ver ejemplos.');
+var U={cero:0,uno:1,dos:2,tres:3,cuatro:4,cinco:5,seis:6,siete:7,ocho:8,nueve:9,diez:10,once:11,doce:12,trece:13,catorce:14,quince:15,dieciseis:16,diecisiete:17,dieciocho:18,diecinueve:19,veinte:20,veintiuno:21,veintidos:22,veintitres:23,veinticuatro:24,veinticinco:25,veintiseis:26,veintisiete:27,veintiocho:28,veintinueve:29,treinta:30,cuarenta:40,cincuenta:50,sesenta:60,setenta:70,ochenta:80,noventa:90,cien:100,ciento:100,doscientos:200,trescientos:300,cuatrocientos:400,quinientos:500,seiscientos:600,setecientos:700,ochocientos:800,novecientos:900};
+function w2n(t){
+  var w=t.split(' '),out=[],r=null;
+  function fl(){if(r){out.push(String(r.t+r.c));r=null}}
+  for(var i=0;i<w.length;i++){
+    var x=w[i];
+    if(U[x]!==undefined&&!(x==='ciento'&&w[i-1]==='por')){r=r||{t:0,c:0};r.c+=U[x]}
+    else if(r&&x==='y'&&U[w[i-1]]>=30&&U[w[i-1]]<100&&U[w[i+1]]>=1&&U[w[i+1]]<10){}
+    else if(x==='mil'){r=r||{t:0,c:0};r.t+=(r.c||1)*1000;r.c=0}
+    else if(x==='millon'||x==='millones'){r=r||{t:0,c:0};r.t+=(r.c||1)*1e6;r.c=0}
+    else{fl();out.push(x)}
+  }
+  fl();return out.join(' ');
+}
+(function(){
+  var SR=window.SpeechRecognition||window.webkitSpeechRecognition,mic=document.getElementById('mic'),rec=null,on=false;
+  mic.onclick=function(){
+    if(!SR){add('b','Este navegador no soporta reconocimiento de voz. Usa Chrome, Edge o Safari.');return}
+    if(on){rec.stop();return}
+    rec=new SR();rec.lang='es-MX';rec.interimResults=false;rec.maxAlternatives=1;
+    rec.onstart=function(){on=true;mic.textContent='⏹';mic.style.background='#c2410c';mic.style.color='#fff';add('b','Escuchando… habla ahora.')};
+    rec.onend=function(){on=false;mic.textContent='🎤';mic.style.background='';mic.style.color=''};
+    rec.onresult=function(e){var s=e.results[0][0].transcript;document.getElementById('ci').value=w2n(norm(s)).replace(/ por ?ciento/g,'%');send()};
+    rec.onerror=function(e){
+      var m={'not-allowed':'El navegador bloqueó el micrófono.','service-not-allowed':'El micrófono está bloqueado.','no-speech':'No escuché nada.','audio-capture':'No encuentro ningún micrófono.','network':'El reconocimiento de voz necesita internet.'};
+      add('b',m[e.error]||('Error de voz: '+e.error));
+    };
+    try{rec.start()}catch(err){add('b','No se pudo iniciar el micrófono: '+err.message)}
+  };
+})();
+</script>
+
+<script>
+[['precio','valor de venta'],['precio','tarifa'],['unidades','productos'],['unidades','articulos'],['cf','renta'],['cv','costo por unidad'],['cv','costo de produccion'],['cv','materia prima']].forEach(function(a){TERMS.push({k:a[0],t:a[1]})});
+var ORG=JSON.parse(JSON.stringify(S)),HIST=[],FUT=[],ESC={},VOZ=false,SP=false,NOPUSH=false;
+var snap=function(){return JSON.stringify(S)};
+/* ✅ FIX 2: helper safe() para blindar toda la cadena contra NaN */
+var safe=function(x){return (typeof x==='number'&&isFinite(x))?x:0};
+function apply(o){campos.forEach(function(c){set(c,safe(o&&o[c.id]))})}
+function M(){var P=safe(S.precio),U=safe(S.unidades),CF=safe(S.cf),CV=safe(S.cv),mc=P-CV,pe=mc>0?CF/mc:Infinity,ut=P*U-CF-CV*U;return{P:P,U:U,CF:CF,CV:CV,mc:mc,pe:pe,ing:P*U,ct:CF+CV*U,ut:ut,ms:U>0&&isFinite(pe)?(U-pe)/U*100:NaN,dol:ut!==0?mc*U/ut:NaN}}
+var NUM='(\\d+(?:\\.\\d+)?)',GAN=new RegExp('(?:ganar|utilidad(?: de| objetivo)?)\\s*\\$?\\s*'+NUM);
+function gx(t){var m=t.match(GAN);return m?parseFloat(m[1]):0}
+function vb(t){return t.replace(/\b(subo|subimos|eleva|elevo)\b/g,'sube').replace(/\b(bajo|bajamos|rebaja|rebajo|recorta|recorto|reduzco|disminuyo|decrementa)\b/g,'baja').replace(/\baumento\b/g,'aumenta')}
+var HELP='Comandos:\n• AJUSTAR: "sube el precio 10%", "baja costos fijos 5000", "pon unidades en 1500", "duplica unidades", "mitad de costos fijos"\n• CONSULTAR: "punto de equilibrio", "utilidad", "ingresos", "margen de contribución", "margen de seguridad", "apalancamiento", "cuántas unidades me faltan", "resumen completo"\n• OBJETIVOS: "unidades para ganar 20000", "precio para ganar 20000", "precio mínimo", "costo variable máximo", "costos fijos máximos"\n• ANALIZAR: "qué pasa si subo el precio 10%", "sensibilidad", "cuánto he cambiado"\n• ESCENARIOS: "guarda escenario A", "carga escenario A", "compara escenario A", "escenarios"\n• CONTROL: "deshacer", "rehacer", "reinicia", "modo oscuro", "activa la voz", "silencio", "limpia el chat"\n• RECORRIDO: "recorrido guiado" o "haz un tour"';
+var H=[
+[/deshacer todo|valores originales|estado inicial/,function(){NOPUSH=true;apply(ORG);return 'Valores originales restaurados.\n'+resumen()}],
+[/deshac|paso atras|regresa|anterior/,function(){NOPUSH=true;if(!HIST.length)return 'No hay nada que deshacer.';FUT.push(snap());apply(JSON.parse(HIST.pop()));return 'Deshecho.\n'+resumen()}],
+[/rehac|adelante/,function(){NOPUSH=true;if(!FUT.length)return 'No hay nada que rehacer.';HIST.push(snap());apply(JSON.parse(FUT.pop()));return 'Rehecho.\n'+resumen()}],
+[/guarda\w* (?:el |este )?escenario\s*(\w+)?/,function(t,m){var k=(m[1]||'a').toUpperCase();ESC[k]=snap();return 'Escenario '+k+' guardado.\n\n💡 Ahora di "compara con escenario '+k+'" o "anima el escenario '+k+'" para verlo.'}],
+[/(?:carga|abre|usa|recupera|aplica)\w* (?:el )?escenario\s*(\w+)?/,function(t,m){var k=(m[1]||'a').toUpperCase();if(!ESC[k])return 'No existe el escenario '+k+'.';apply(JSON.parse(ESC[k]));return 'Escenario '+k+' cargado.\n'+resumen()}],
+[/escenarios/,function(){var k=Object.keys(ESC);return k.length?'Escenarios guardados: '+k.join(', '):'No hay escenarios. Di "guarda escenario A".'}],
+[/(que es|explica|como se calcula).*equilibrio/,function(){return 'El punto de equilibrio es el nivel de ventas donde ni ganas ni pierdes: Costos fijos ÷ (Precio − Costo variable unitario).'}],
+[/(que es|explica).*margen de contribucion/,function(){return 'El margen de contribución es lo que cada unidad aporta para cubrir costos fijos: Precio − Costo variable unitario.'}],
+[/(que es|explica).*seguridad/,function(){return 'El margen de seguridad indica cuánto pueden caer tus ventas antes de llegar al equilibrio.'}],
+[/(que es|explica).*apalanca/,function(){return 'El apalancamiento operativo mide cuánto cambia la utilidad por cada 1 % de cambio en ventas.'}],
+[/deja de escuchar|apaga (el )?microfono|para de escuchar|detente/,function(){if(typeof stopRec==='function')stopRec();return 'Micrófono apagado.'}],
+[/(activa|prende|enciende|con) .*(voz|respuestas habladas)|^habla\b|leeme las respuestas/,function(){VOZ=true;return 'Respuestas en voz alta activadas.'}],
+[/silencio|calla|sin voz|(desactiva|apaga).*voz/,function(){VOZ=false;window.speechSynthesis&&speechSynthesis.cancel();return 'Respuestas en voz alta desactivadas.'}],
+[/modo oscuro|tema oscuro/,function(){document.documentElement.setAttribute('data-theme','dark');return 'Modo oscuro.'}],
+[/modo claro|tema claro/,function(){document.documentElement.setAttribute('data-theme','light');return 'Modo claro.'}],
+[/limpi\w+ (el )?(chat|pantalla)|borra (el )?chat/,function(){document.getElementById('msgs').innerHTML='';return 'Chat limpio.'}],
+[/modo (de )?(porcentaje|por ciento)/,function(){document.getElementById('mP').onclick();return 'Los botones ± ajustan en porcentaje.'}],
+[/modo (de )?(importe|directo|pesos)/,function(){document.getElementById('mI').onclick();return 'Los botones ± ajustan por importe directo.'}],
+[new RegExp('\\bpaso\\b.*?'+NUM),function(t,m){document.getElementById('paso').value=m[1];return 'Paso de los botones: '+m[1]+'.'}],
+[/duplica|doble|dobla|triplica|triple|mitad|entre dos/,function(t){var k=campo(t);if(!k)return;var f=/tripl/.test(t)?3:/mitad|entre dos/.test(t)?.5:2,o=S[k];set(C(k),o*f);return NOM[k]+': '+num(o)+' → '+num(S[k])+'.\n'+resumen()}],
+[/precio.*(minimo|equilibrio|no perder|sin perder)|cuanto puedo bajar (el )?precio/,function(){var q=M();if(q.U<=0)return 'Necesito unidades mayores a cero.';var p=q.CF/q.U+q.CV;REF={tipo:'precio',val:p,label:'Precio mínimo '+fmt(p)};TARGET=null;if(typeof dibuja==='function')dibuja();return 'Con '+num(q.U)+' unidades, el precio mínimo para no perder es '+fmt(p)+'.'}],
+[new RegExp('precio.*(?:ganar|utilidad(?: de| objetivo)?)\\s*\\$?\\s*'+NUM),function(t,m){var x=parseFloat(m[1]),q=M();if(q.U<=0)return 'Necesito unidades mayores a cero.';var p=(q.CF+x)/q.U+q.CV;REF={tipo:'precio',val:p,label:'Precio para ganar '+fmt(x)};TARGET=null;if(typeof dibuja==='function')dibuja();return 'Para ganar '+fmt(x)+' con '+num(q.U)+' unidades, el precio debe ser '+fmt(p)+'.'}],
+[/(costos? variables?|variables).*(maximo|tope|puedo pagar|aguanto)/,function(t){var q=M(),x=gx(t);if(q.U<=0)return 'Necesito unidades mayores a cero.';var v=q.P-(q.CF+x)/q.U;REF={tipo:'cv',val:v,label:'Costo variable máx. '+fmt(v)};TARGET=null;if(typeof dibuja==='function')dibuja();return 'El costo variable máximo por unidad es '+fmt(v)+'.'}],
+[/(costos? fijos?|fijos).*(maximo|tope|puedo pagar|aguanto)/,function(t){var q=M(),x=gx(t);var f=q.mc*q.U-x;REF={tipo:'cf',val:f,label:'Costos fijos máx. '+fmt(f)};TARGET=null;if(typeof dibuja==='function')dibuja();return 'Los costos fijos máximos son '+fmt(f)+'.'}],
+[/falta|faltan/,function(){var q=M();if(!isFinite(q.pe))return 'No hay equilibrio con estos valores.';return q.U>=q.pe?'Ya superas el equilibrio por '+num(q.U-q.pe)+' unidades.':'Te faltan '+num(q.pe-q.U)+' unidades para el equilibrio.'}],
+[/\bgano\b|ganando|pierdo|perdiendo|perdida/,function(){var q=M();return q.ut>=0?'Estás ganando '+fmt(q.ut)+'.':'Estás perdiendo '+fmt(-q.ut)+'.'}],
+[/seguridad/,function(){var q=M();return isFinite(q.ms)?'Margen de seguridad: '+num(q.ms)+' % ('+num(q.U-q.pe)+' unidades sobre el equilibrio).':'No aplica con estos valores.'}],
+[/apalanca|\bdol\b/,function(){var q=M();return isFinite(q.dol)?'Apalancamiento operativo: '+num(q.dol)+'x.':'No aplica (utilidad en cero).'}],
+[/ingresos?|ventas totales|facturacion|cuanto vendo/,function(){return 'Ingresos actuales: '+fmt(M().ing)+'.'}],
+[/costos? totales|gastos totales/,function(){return 'Costos totales: '+fmt(M().ct)+'.'}],
+[/resumen completo|dame todo|todos los datos|todo el modelo/,function(){var q=M();return 'Precio '+fmt(q.P)+' | Unidades '+num(q.U)+'\nCostos fijos '+fmt(q.CF)+' | Costo variable '+fmt(q.CV)+'\nIngresos '+fmt(q.ing)+' | Costos totales '+fmt(q.ct)+'\nUtilidad '+fmt(q.ut)+'\nEquilibrio '+num(q.pe)+' u ('+fmt(q.pe*q.P)+')\nMargen de seguridad '+(isFinite(q.ms)?num(q.ms)+' %':'—')}],
+[/sensibilidad|que afecta mas|que mueve mas/,function(){var sv=snap(),o=['Efecto de subir 10 % cada variable (equilibrio actual '+num(M().pe)+' u):'];['precio','cf','cv'].forEach(function(k){apply(JSON.parse(sv));set(C(k),S[k]*1.1);o.push('• '+NOM[k]+': '+num(M().pe)+' u')});apply(JSON.parse(sv));NOPUSH=true;return o.join('\n')}],
+[/cuanto (he )?cambi|contra el original|respecto al original|que he cambiado/,function(){var l=[];campos.forEach(function(c){if(S[c.id]!==ORG[c.id])l.push('• '+NOM[c.id]+': '+num(ORG[c.id])+' → '+num(S[c.id]))});return l.length?'Cambios vs original:\n'+l.join('\n'):'Todo está igual que al inicio.'}],
+[/^(hola|buenas|buen dia|hey)/,function(){return '¡Hola! Dime qué ajustar o consultar. Di "ayuda" para ver ejemplos.'}],
+[/gracias/,function(){return 'De nada.'}],
+[/ayuda|comandos|que puedes hacer/,function(){return HELP}]
+];
+/* ✅ FIX 3: Mof() devuelve ing, ct y dol — era la causa raíz de los NaN en barras() */
+function Mof(o){var P=safe(o&&o.precio),U=safe(o&&o.unidades),CF=safe(o&&o.cf),CV=safe(o&&o.cv),mc=P-CV,pe=mc>0?CF/mc:Infinity,ut=P*U-CF-CV*U;return{P:P,U:U,CF:CF,CV:CV,mc:mc,pe:pe,ing:P*U,ct:CF+CV*U,ut:ut,ms:U>0&&isFinite(pe)?(U-pe)/U*100:NaN,dol:ut!==0?mc*U/ut:NaN}}
+function veredicto(before,after,contra){
+  var dU=after.ut-before.ut,dPE=(isFinite(after.pe)&&isFinite(before.pe))?after.pe-before.pe:NaN,eps=0.01;
+  if(Math.abs(dU)<eps&&Math.abs(dPE||0)<eps)return null;
+  var sube=dU>eps,baja=dU<-eps,pmej=isFinite(dPE)?dPE<-eps:null,ppeor=isFinite(dPE)?dPE>eps:null;
+  if(sube&&(pmej||dPE===null||Math.abs(dPE)<eps))return '✅ Buena señal vs '+contra+': la utilidad sube '+fmt(Math.abs(dU))+(pmej?' y el equilibrio también mejora.':'.');
+  if(sube&&ppeor)return '🟡 Mixto vs '+contra+': la utilidad sube '+fmt(Math.abs(dU))+', pero el equilibrio subió '+num(Math.abs(dPE))+' u.';
+  if(baja&&ppeor)return '🔴 No conviene vs '+contra+': utilidad '+fmt(-Math.abs(dU))+' y equilibrio +'+num(Math.abs(dPE))+' u.';
+  if(baja&&pmej)return '🟡 Mixto vs '+contra+': el equilibrio mejoró '+num(Math.abs(dPE))+' u, pero la utilidad bajó '+fmt(Math.abs(dU))+'.';
+  return (sube?'✅':'🔴')+' Utilidad '+(sube?'sube':'baja')+' '+fmt(Math.abs(dU))+' vs '+contra+'.';
+}
+var LASTCMP=null,ANIM={running:false,raf:null};
+function ease(t){return t<.5?4*t*t*t:1-Math.pow(-2*t+2,3)/2}
+/* ✅ FIX 7: showAnimBtn robusto y con fallback a primer escenario existente */
+function showAnimBtn(){
+  var k=LASTCMP||Object.keys(ESC)[0];
+  if(!k)return;
+  LASTCMP=k;
+  [document.getElementById('animBtn'),document.getElementById('animBtn2')].forEach(function(b){
+    b.style.display='inline-block';
+    b.textContent='▶ Animar vs Escenario '+k;
+    b.onclick=function(){animar(k)};
+  });
+}
+function pararAnim(){if(ANIM.running){clearInterval(ANIM.raf);ANIM.running=false}}
+function animar(key){
+  if(!ESC[key])return;
+  pararAnim();
+  if(typeof pararTour==='function')pararTour();
+  var o0=JSON.parse(snap()),o1=JSON.parse(ESC[key]),legs=[[o0,o1],[o1,o0],[o0,o1],[o1,o0],[o0,o1],[o1,o0]],legMs=1800,idx=0,t0=null;
+  ANIM.running=true;[document.getElementById('animBtn'),document.getElementById('animBtn2')].forEach(function(b){b.textContent='⏸ Animando…'});
+  function frame(ts){
+    try{
+      if(!ANIM.running){clearInterval(ANIM.raf);return}
+      if(!t0)t0=ts;
+      var p=Math.min(1,(ts-t0)/legMs),e=ease(p),a=legs[idx][0],b=legs[idx][1];
+      var interp={precio:safe(a.precio)+(safe(b.precio)-safe(a.precio))*e,unidades:safe(a.unidades)+(safe(b.unidades)-safe(a.unidades))*e,cf:safe(a.cf)+(safe(b.cf)-safe(a.cf))*e,cv:safe(a.cv)+(safe(b.cv)-safe(a.cv))*e};
+      var qi=Mof(interp);
+      document.getElementById('ch').innerHTML=main(qi,null);
+      document.getElementById('c2').innerHTML=util(qi);
+      document.getElementById('c3').innerHTML=dona(qi);
+      document.getElementById('c4').innerHTML=barras(qi);
+      if(p>=1){idx++;t0=null;kpis(Mof(b));if(idx>=legs.length){ANIM.running=false;clearInterval(ANIM.raf);showAnimBtn();LASTDRAWN=JSON.parse(snap());dibuja();return}}
+    }catch(err){ANIM.running=false;clearInterval(ANIM.raf);showAnimBtn();add0('b','⚠️ La animación se detuvo: '+err.message);console.error('animar()',err)}
+  }
+  ANIM.raf=setInterval(function(){frame(Date.now())},16);
+}
+var TOUR={running:false,raf:null},STOPS=['#kp','.gm','.gu','.go','.gr','.gs'];
+function stageT(){var m=/translate\(([-\d.]+)px,\s*([-\d.]+)px\) scale\(([\d.]+)\)/.exec(document.getElementById('stage').style.transform||'');return m?{x:+m[1],y:+m[2],s:+m[3]}:{x:0,y:0,s:1}}
+function setStageT(t){document.getElementById('stage').style.transform='translate('+t.x+'px,'+t.y+'px) scale('+t.s+')'}
+function targetFor(sel){
+  var cur=stageT();setStageT({x:0,y:0,s:1});
+  var el=document.querySelector(sel);if(!el)return null;
+  var r=el.getBoundingClientRect();setStageT(cur);
+  var vw=window.innerWidth,vh=window.innerHeight;
+  var sc=Math.min(Math.max(Math.min(vw*.88/r.width,vh*.8/r.height),.6),1.9);
+  var cx=r.left+r.width/2,cy=r.top+r.height/2;
+  return{x:vw/2-cx*sc,y:vh/2-cy*sc,s:sc,el:el};
+}
+function animT(to,ms,cb){var from=stageT(),t0=null;
+  function fr(ts){if(!TOUR.running){clearInterval(TOUR.raf);return}if(!t0)t0=ts;var p=Math.min(1,(ts-t0)/ms),e=ease(p);
+    setStageT({x:from.x+(to.x-from.x)*e,y:from.y+(to.y-from.y)*e,s:from.s+(to.s-from.s)*e});
+    if(p>=1){clearInterval(TOUR.raf);cb&&cb()}}
+  TOUR.raf=setInterval(function(){fr(Date.now())},16);}
+function narra(i,q){return[
+  'Empecemos con el resumen: tu punto de equilibrio es de '+num(q.pe)+' unidades, con una utilidad actual de '+fmt(q.ut)+(isFinite(q.ms)?' y un margen de seguridad de '+num(q.ms)+' por ciento':'')+'.',
+  'Aquí ves ingresos y costos totales cruzándose justo en el punto de equilibrio. La zona verde es utilidad, la roja es pérdida.',
+  'Esta curva muestra cómo crece tu utilidad conforme vendes más allá del equilibrio.',
+  'Aquí se compara qué parte de tus costos es fija y qué parte es variable.',
+  'Esta gráfica resume ingresos, costos y utilidad en una sola comparación.',
+  'Y por último, este tornado muestra qué variable mueve más el punto de equilibrio si sube o baja un diez por ciento.'
+][i]}
+/* ✅ FIX 5: pararTour también detiene la animación huérfana */
+function pararTour(){
+  if(TOUR.running){
+    TOUR.running=false;
+    clearInterval(TOUR.raf);
+    if(typeof ANIM!=='undefined'&&ANIM.running){clearInterval(ANIM.raf);ANIM.running=false;try{showAnimBtn()}catch(e){}}
+    document.body.classList.remove('tour-active');
+    var b=document.getElementById('tourBtn');if(b)b.textContent='🎬 Recorrido guiado';
+    setStageT({x:0,y:0,s:1});
+    var hi=document.querySelector('.tourhi');if(hi)hi.classList.remove('tourhi');
+    if(window.speechSynthesis)speechSynthesis.cancel();SP=false;
+  }
+}
+/* ✅ FIX 6: tour() con BUCLE A ↔ B al final (3 ciclos) */
+function tour(){
+  if(TOUR.running)return;
+  pararAnim();TOUR.running=true;document.body.classList.add('tour-active');
+  var btn=document.getElementById('tourBtn');btn.textContent='⏸ En recorrido…';var idx=0;
+  function log(t){try{var d=document.createElement('div');d.className='m b';d.textContent=t;var m=document.getElementById('msgs');m.appendChild(d);m.scrollTop=m.scrollHeight}catch(e){}}
+  function step(){
+    try{
+      if(idx>0){var prevEl=document.querySelector(STOPS[idx-1]);if(prevEl)prevEl.classList.remove('tourhi')}
+      if(idx>=STOPS.length){
+        var ks=Object.keys(ESC);
+        if(ks.length<2){
+          if(!ESC.A)ESC.A=JSON.stringify({precio:S.precio,unidades:S.unidades,cf:S.cf,cv:S.cv});
+          if(!ESC.B)ESC.B=JSON.stringify({precio:S.precio*1.1,unidades:S.unidades,cf:S.cf,cv:S.cv});
+          ks=['A','B'];
+          log('ℹ️ No había escenarios guardados. Creé A (actual) y B (precio +10 %) para el bucle.');
+        }
+        var kA=ks[0],kB=ks[1],oA=JSON.parse(ESC[kA]),oB=JSON.parse(ESC[kB]);
+        var legs=[[oA,oB],[oB,oA]],legMs=2200,li=0,t0=null,cy=0,mx=3;
+        ANIM.running=true;LASTCMP=kA;
+        [document.getElementById('animBtn'),document.getElementById('animBtn2')].forEach(function(b){
+          b.style.display='inline-block';b.textContent='⏸ Detener';
+          b.onclick=function(){ANIM.running=false;pararTour()};
+        });
+        log('🔁 Bucle '+kA+' ↔ '+kB+'. Toca ⏸ Detener para salir.');
+        function frame(ts){
+          try{
+            if(!ANIM.running){clearInterval(ANIM.raf);showAnimBtn();return}
+            if(!t0)t0=ts;
+            var p=Math.min(1,(ts-t0)/legMs),e=ease(p),a=legs[li][0],b=legs[li][1];
+            var interp={
+              precio:safe(a.precio)+(safe(b.precio)-safe(a.precio))*e,
+              unidades:safe(a.unidades)+(safe(b.unidades)-safe(a.unidades))*e,
+              cf:safe(a.cf)+(safe(b.cf)-safe(a.cf))*e,
+              cv:safe(a.cv)+(safe(b.cv)-safe(a.cv))*e
+            };
+            var qi=Mof(interp);
+            document.getElementById('ch').innerHTML=main(qi,null);
+            document.getElementById('c2').innerHTML=util(qi);
+            document.getElementById('c3').innerHTML=dona(qi);
+            document.getElementById('c4').innerHTML=barras(qi);
+            kpis(qi);
+            if(p>=1){
+              li++;t0=null;
+              if(li>=legs.length){
+                li=0;cy++;
+                if(cy>=mx){
+                  ANIM.running=false;clearInterval(ANIM.raf);showAnimBtn();
+                  animT({x:0,y:0,s:1},900,function(){
+                    TOUR.running=false;document.body.classList.remove('tour-active');
+                    btn.textContent='🎬 Recorrido guiado';
+                  });
+                  return;
+                }
+              }
+            }
+          }catch(err){
+            ANIM.running=false;clearInterval(ANIM.raf);showAnimBtn();
+            TOUR.running=false;pararTour();
+            add0('b','⚠️ Error en el bucle: '+err.message);
+            console.error('tour loop',err);
+          }
+        }
+        ANIM.raf=setInterval(function(){frame(Date.now())},16);
+        return;
+      }
+      var tgt=targetFor(STOPS[idx]);
+      if(!tgt){idx++;step();return}
+      animT(tgt,1100,function(){
+        if(!TOUR.running)return;
+        tgt.el.classList.add('tourhi');
+        var txt=narra(idx,Mof(S));add0('b','🎬 '+txt);
+        var done=false;function next(){if(done)return;done=true;idx++;if(TOUR.running)step()}
+        if(VOZ&&window.speechSynthesis){
+          speechSynthesis.cancel();
+          var u=new SpeechSynthesisUtterance(txt);u.lang='es-MX';
+          SP=true;u.onend=u.onerror=function(){SP=false;setTimeout(next,250)};
+          speechSynthesis.speak(u);setTimeout(next,7000);
+        }else setTimeout(next,2600);
+      });
+    }catch(err){
+      TOUR.running=false;pararTour();
+      add0('b','⚠️ El recorrido se detuvo: '+err.message);
+      console.error('tour()',err);
+    }
+  }
+  step();
+}
+document.getElementById('tourBtn').onclick=function(){if(TOUR.running)pararTour();else tour()};
+H.unshift([/recorrido|tour guiado|haz un tour|guiame por (el |todo )?panel|muestrame (el |un )?recorrido/,function(){NOPUSH=true;tour();return 'Arrancando el recorrido guiado…'}]);
+var set0=set;set=function(c,val,fromNum){pararTour();set0(c,val,fromNum)};
+var cmd0=cmd;
+function exec(t){for(var i=0;i<H.length;i++){var m=t.match(H[i][0]);if(m){var r=H[i][1](t,m);if(r!==undefined)return r}}return cmd0(vb(t))}
+/* ✅ FIX 8: cmd() avisa y muestra el botón Animar tras cualquier cambio si hay escenarios */
+cmd=function(t){
+  if(TOUR.running&&!/recorrido|tour guiado|haz un tour|guiame por|muestrame (el |un )?recorrido/.test(t))pararTour();
+  var b=snap();NOPUSH=false;var r=exec(t);
+  if(!NOPUSH&&snap()!==b){HIST.push(b);FUT=[]}
+  if(!NOPUSH&&snap()!==b&&!/^(deshacer|rehacer|reinicia|guarda|carga|abre|usa|recupera|aplica|compara|escenarios)/.test(t)){
+    var qPrev=Mof(JSON.parse(b)),qNow=Mof(S),qBase=Mof(ORG),extra=[];
+    var v1=veredicto(qPrev,qNow,'tu último cambio');if(v1)extra.push(v1);
+    var v2=veredicto(qBase,qNow,'el modelo base');if(v2)extra.push(v2);
+    extra.push('💡 '+sugerir(qNow));
+    if(extra.length)r=r+'\n\n'+extra.join('\n\n');
+    var ks=Object.keys(ESC);
+    if(ks.length>0){
+      try{showAnimBtn()}catch(e){}
+      r+='\n\n🔁 Tienes escenario(s) '+ks.join(', ')+' guardado(s). Di "compara con escenario '+ks[0]+'" para verlo, o toca "▶ Animar" arriba.';
+    }
+  }
+  return r};
+var add0=add;
+add=function(c,x){add0(c,x);if(c==='b'&&VOZ&&window.speechSynthesis){speechSynthesis.cancel();var u=new SpeechSynthesisUtterance(x.replace(/→/g,' a ').replace(/[•|$]/g,' '));u.lang='es-MX';SP=true;u.onend=u.onerror=function(){setTimeout(function(){SP=false},400)};speechSynthesis.speak(u)}};
+var SR=window.SpeechRecognition||window.webkitSpeechRecognition,REC=null,LISTEN=false,mic=document.getElementById('mic'),ci=document.getElementById('ci');
+var ERR={'not-allowed':'Micrófono bloqueado.','service-not-allowed':'Micrófono bloqueado.','audio-capture':'Sin micrófono.','network':'Reconocimiento necesita internet.'};
+function ui(on){mic.textContent=on?'⏹':'🎤';mic.style.background=on?'#c2410c':'';mic.style.color=on?'#fff':'';ci.placeholder=on?'Escuchando…':'Ej: sube el precio 10%'}
+function stopRec(){LISTEN=false;try{REC&&REC.stop()}catch(e){}ui(false)}
+function startRec(){
+  if(!SR){add('b','Este navegador no soporta reconocimiento de voz. Usa Chrome o Edge.');return}
+  REC=new SR();REC.lang='es-MX';REC.continuous=true;REC.interimResults=true;REC.maxAlternatives=5;
+  REC.onstart=function(){ui(true)};
+  REC.onresult=function(e){for(var i=e.resultIndex;i<e.results.length;i++){var r=e.results[i];if(SP)continue;if(r.isFinal){ci.value='';send(r[0].transcript)}else ci.value=r[0].transcript}};
+  REC.onerror=function(e){if(e.error==='no-speech'||e.error==='aborted')return;LISTEN=false;add('b',ERR[e.error]||('Error de voz: '+e.error))};
+  REC.onend=function(){if(LISTEN)setTimeout(function(){try{REC.start()}catch(x){}},250);else ui(false)};
+  LISTEN=true;try{REC.start()}catch(x){add('b','No se pudo iniciar: '+x.message)}
+}
+mic.onclick=function(){if(LISTEN){stopRec();add('b','Micrófono apagado.')}else{startRec();add('b','Escuchando…')}};
+</script>
+
+<script>
+var BLUE='#2b2ed6',GRN='#16a34a',RED='#dc2626',ORA='#f59e0b',GRY='#8892a3',GH=null,PREV={},TARGET=null,REF=null,ALERTS={},SUGI=0;
+var fm0=function(n){return isFinite(n)?n.toLocaleString('es-MX',{style:'currency',currency:'MXN',maximumFractionDigits:0}):'—'};
+function ab(n){if(!isFinite(n))return '—';var a=Math.abs(n);return (n<0?'-':'')+(a>=1e6?(a/1e6).toFixed(1)+'M':a>=1e3?(a/1e3).toFixed(a>=1e4?0:1)+'K':Math.round(a))}
+function pl(a,f,o){return '<polygon points="'+a.map(function(p){return p[0]+','+p[1]}).join(' ')+'" fill="'+f+'" opacity="'+o+'"/>'}
+function ln(x1,y1,x2,y2,c,w,d){return '<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" stroke="'+c+'" stroke-width="'+(w||1)+'" stroke-linecap="round"'+(d?' stroke-dasharray="'+d+'"':'')+'/>'}
+function tx(x,y,t,c,z,a,w){return '<text x="'+x+'" y="'+y+'" fill="'+(c||'currentColor')+'" font-size="'+(z||11)+'" text-anchor="'+(a||'start')+'"'+(w?' font-weight="'+w+'"':'')+'>'+t+'</text>'}
+function kpis(q){
+  var it=[['🎯','Punto de equilibrio',isFinite(q.pe)?num(q.pe)+' u':'—'],['💵','Equilibrio en $',fm0(q.pe*q.P)],['📈','Utilidad actual',fm0(q.ut),q.ut>=0?GRN:RED],['🛡️','Margen de seguridad',isFinite(q.ms)?num(q.ms)+' %':'—',q.ms>=0?GRN:RED],['⚙️','Margen contrib.',q.P>0?num(q.mc/q.P*100)+' %':'—'],['🧾','Ingresos',fm0(q.ing)]];
+  document.getElementById('kp').innerHTML=it.map(function(a,i){var ch=PREV[i]!==undefined&&PREV[i]!==a[2];PREV[i]=a[2];return '<div class="kc'+(ch?' fl':'')+'"><div><small>'+a[1]+'</small><b style="color:'+(a[3]||'inherit')+'">'+a[2]+'</b></div><i>'+a[0]+'</i></div>'}).join('');
+}
+function main(q,g){
+  var P=q.P,CF=q.CF,CV=q.CV,U=q.U,pe=q.pe,ok=q.mc>0&&isFinite(pe),gq=null,i,s='',GR='rgba(136,146,163,.25)';
+  if(g){gq={P:g.precio,CF:g.cf,CV:g.cv,U:g.unidades};gq.mc=gq.P-gq.CV;gq.pe=gq.mc>0?gq.CF/gq.mc:Infinity}
+  var xm=Math.max(U,ok?pe:0,gq&&isFinite(gq.pe)?gq.pe:0,gq?gq.U:0,1)*1.35,ym=Math.max(P*xm,CF+CV*xm,gq?gq.P*xm:0,gq?gq.CF+gq.CV*xm:0,1);
+  var L=54,R=620,T=24,B=250,X=function(x){return L+x/xm*(R-L)},Y=function(y){return B-y/ym*(B-T)};
+  for(i=0;i<=4;i++)s+=ln(L,Y(ym*i/4),R,Y(ym*i/4),GR,1)+tx(L-6,Y(ym*i/4)+4,ab(ym*i/4),GRY,10,'end');
+  for(i=0;i<=5;i++)s+=tx(X(xm*i/5),B+15,ab(xm*i/5),GRY,10,'middle');
+  s+=tx(R,B+30,'Unidades',GRY,10,'end');
+  if(ok)s+=pl([[X(0),Y(0)],[X(pe),Y(pe*P)],[X(0),Y(CF)]],RED,.16)+pl([[X(pe),Y(pe*P)],[X(xm),Y(P*xm)],[X(xm),Y(CF+CV*xm)]],GRN,.16);
+  else s+=pl([[X(0),Y(0)],[X(xm),Y(P*xm)],[X(xm),Y(CF+CV*xm)],[X(0),Y(CF)]],RED,.16);
+  if(gq){s+=ln(X(0),Y(0),X(xm),Y(gq.P*xm),GRY,1.6,'5 4')+ln(X(0),Y(gq.CF),X(xm),Y(gq.CF+gq.CV*xm),GRY,1.6,'5 4');
+    if(isFinite(gq.pe)&&gq.pe<=xm)s+='<circle cx="'+X(gq.pe)+'" cy="'+Y(gq.pe*gq.P)+'" r="6" fill="none" stroke="'+GRY+'" stroke-width="2"/>'+tx(X(gq.pe),Y(gq.pe*gq.P)+20,'PE ref. '+num(gq.pe),GRY,10,'middle')}
+  s+=ln(X(0),Y(0),X(xm),Y(P*xm),BLUE,2.8)+ln(X(0),Y(CF),X(xm),Y(CF+CV*xm),ORA,2.8)+ln(X(0),Y(CF),X(xm),Y(CF),GRY,1,'3 4');
+  var uc=q.ut>=0?GRN:RED,y1=Y(P*U),y2=Y(CF+CV*U),ra=X(U)>R-150;
+  s+=ln(X(U),B,X(U),Math.min(y1,y2),'rgba(100,110,130,.45)',1,'3 4')+ln(X(U),y1,X(U),y2,uc,6)+tx(X(U)+(ra?-10:10),(y1+y2)/2+4,'Utilidad '+fm0(q.ut),uc,11,ra?'end':'start',700);
+  if(isFinite(q.ms)){var a=X(Math.min(U,pe)),b=X(Math.max(U,pe));s+='<rect x="'+a+'" y="'+(B-11)+'" width="'+Math.max(b-a,1)+'" height="11" fill="'+uc+'" opacity=".85"/>'+tx((a+b)/2,B-16,(q.ms>=0?'Margen de seguridad ':'Déficit ')+num(Math.abs(q.ms))+' %',uc,10,'middle',700)}
+  if(ok&&pe<=xm){var pa=X(pe)>R-200;s+=ln(X(pe),Y(pe*P),X(pe),B,'#111',1,'3 3')+'<circle cx="'+X(pe)+'" cy="'+Y(pe*P)+'" r="7" fill="#111" stroke="#fff" stroke-width="2"/>'+tx(X(pe)+(pa?-12:12),Y(pe*P)-12,'PE: '+num(pe)+' u · '+fm0(pe*P),'currentColor',12,pa?'end':'start',700)}
+  [[BLUE,'Ingresos'],[ORA,'Costos totales'],[GRY,'Costos fijos / referencia']].forEach(function(l,k){s+='<rect x="'+(L+k*105)+'" y="6" width="14" height="4" fill="'+l[0]+'"/>'+tx(L+k*105+19,11,l[1],GRY,10)});
+  if(TARGET&&TARGET.u<=xm){var tc='#7c3aed';s+=ln(X(TARGET.u),T,X(TARGET.u),B,tc,2,'2 3')+'<circle cx="'+X(TARGET.u)+'" cy="'+Y(TARGET.u*P)+'" r="6" fill="'+tc+'" stroke="#fff" stroke-width="2"/>'+tx(X(TARGET.u),T+12,TARGET.label+' ('+num(TARGET.u)+' u)',tc,11,X(TARGET.u)>R-160?'end':'start',700)}
+  if(REF){var rc='#0891b2';if(REF.tipo==='precio'&&REF.val<=ym/1)s+=ln(L,Y(REF.val*1),R,Y(REF.val*1),rc,1.6,'2 3')+tx(R,Y(REF.val)-6,REF.label,rc,10,'end',700);
+    else if(REF.tipo==='cv'){var yv=CF+REF.val*xm;if(yv<=ym)s+=ln(X(0),Y(CF),X(xm),Y(yv),rc,1.6,'2 3')+tx(X(xm)-4,Y(yv)-6,REF.label,rc,10,'end',700)}
+    else if(REF.tipo==='cf'&&REF.val<=ym)s+=ln(L,Y(REF.val),R,Y(REF.val),rc,1.6,'2 3')+tx(R,Y(REF.val)-6,REF.label,rc,10,'end',700);}
+  return s;
+}
+function tornado(q){
+  var vars=[['precio','Precio'],['cf','Costos fijos'],['cv','Costo variable'],['unidades','Unidades']],base=q.pe,rows=[];
+  vars.forEach(function(v){var sv={precio:S.precio,unidades:S.unidades,cf:S.cf,cv:S.cv},up=Object.assign({},sv),dn=Object.assign({},sv);up[v[0]]*=1.1;dn[v[0]]*=0.9;
+    function peOf(o){var mc=o.precio-o.cv;return mc>0?o.cf/mc:NaN}
+    rows.push([v[1],peOf(up)-base,peOf(dn)-base]);
+  });
+  var mx=Math.max(1,Math.max.apply(null,rows.map(function(r){return Math.max(Math.abs(r[1]||0),Math.abs(r[2]||0))})));
+  var cx=400,L=170,R=770,rh=38,s=ln(cx,10,cx,10+rows.length*rh,GRY,1)+tx(cx,10+rows.length*rh+16,'Cambio en unidades de equilibrio',GRY,11,'middle');
+  rows.forEach(function(r,i){var y=20+i*rh,w1=isFinite(r[1])?Math.abs(r[1])/mx*(cx-L):0,w2=isFinite(r[2])?Math.abs(r[2])/mx*(cx-L):0;
+    var c1=r[1]>=0?RED:GRN,c2=r[2]>=0?RED:GRN;
+    s+=tx(L-10,y+5,r[0],'currentColor',12,'end',700);
+    s+='<rect x="'+(r[1]>=0?cx:cx-w1)+'" y="'+(y-9)+'" width="'+w1+'" height="18" rx="3" fill="'+c1+'" opacity=".85"/>';
+    s+='<rect x="'+(r[2]>=0?cx:cx-w2)+'" y="'+(y-9)+'" width="'+w2+'" height="18" rx="3" fill="'+c2+'" opacity=".45"/>';
+    s+=tx(r[1]>=0?cx+w1+6:cx-w1-6,y+5,(r[1]>=0?'+':'')+num(r[1]),GRY,10,r[1]>=0?'start':'end');
+  });
+  s+=tx(L+(cx-L-100),8,'▲10% oscuro · ▼10% claro',GRY,10,'start');
+  return s;
+}
+function util(q){
+  var ok=q.mc>0&&isFinite(q.pe),xm=Math.max(q.U,ok?q.pe:0,1)*1.35,p=function(x){return q.mc*x-q.CF},lo=Math.min(0,-q.CF,p(xm)),hi=Math.max(0,p(xm),1);
+  var L=52,R=388,T=16,B=206,X=function(x){return L+x/xm*(R-L)},Y=function(y){return B-(y-lo)/(hi-lo)*(B-T)},s='',z=Y(0);
+  s+=ln(L,z,R,z,GRY,1.5)+tx(L-6,z+4,'0',GRY,10,'end')+tx(L-6,Y(hi)+4,ab(hi),GRY,10,'end')+tx(L-6,Y(lo)+4,ab(lo),GRY,10,'end')+tx(L,B+16,'0',GRY,10,'middle')+tx(R,B+16,ab(xm)+' u',GRY,10,'end');
+  if(ok)s+=pl([[X(0),z],[X(0),Y(-q.CF)],[X(q.pe),z]],RED,.25)+pl([[X(q.pe),z],[X(xm),Y(p(xm))],[X(xm),z]],GRN,.25);
+  else s+=pl([[X(0),z],[X(0),Y(-q.CF)],[X(xm),Y(p(xm))],[X(xm),z]],RED,.25);
+  s+=ln(X(0),Y(-q.CF),X(xm),Y(p(xm)),BLUE,2.8);
+  if(ok)s+='<circle cx="'+X(q.pe)+'" cy="'+z+'" r="6" fill="#111" stroke="#fff" stroke-width="2"/>'+tx(X(q.pe),z-12,'PE '+num(q.pe),'currentColor',11,'middle',700);
+  var c=q.ut>=0?GRN:RED;s+='<circle cx="'+X(q.U)+'" cy="'+Y(p(q.U))+'" r="6" fill="'+c+'" stroke="#fff" stroke-width="2"/>'+tx(X(q.U),Y(p(q.U))+(q.ut>=0?-12:20),'Hoy '+ab(q.ut),c,11,'middle',700);
+  return s;
+}
+function dona(q){
+  var f=q.CF,v=q.CV*q.U,t=f+v,pf=t>0?f/t:0,C=2*Math.PI*62;
+  return '<g transform="rotate(-90 110 120)"><circle cx="110" cy="120" r="62" fill="none" stroke="'+GRY+'" stroke-width="28"/><circle cx="110" cy="120" r="62" fill="none" stroke="'+ORA+'" stroke-width="28" stroke-dasharray="'+(C*pf)+' '+C+'"/></g>'+tx(110,116,'Costos totales',GRY,10,'middle')+tx(110,136,fm0(t),'currentColor',14,'middle',700)+
+   '<rect x="215" y="88" width="12" height="12" fill="'+ORA+'"/>'+tx(233,98,'Fijos '+num(pf*100)+' %','currentColor',12,'start',700)+tx(233,114,fm0(f),GRY,11)+
+   '<rect x="215" y="136" width="12" height="12" fill="'+GRY+'"/>'+tx(233,146,'Variables '+num((1-pf)*100)+' %','currentColor',12,'start',700)+tx(233,162,fm0(v),GRY,11);
+}
+/* ✅ FIX 3b: barras() blindada contra NaN */
+function barras(q){
+  var ing=safe(q.ing),cf=safe(q.CF),cvs=safe(q.CV)*safe(q.U),ut=safe(q.ut);
+  var d=[['Ingresos',ing,BLUE],['C. fijos',cf,ORA],['C. variables',cvs,GRY],['Utilidad',ut,ut>=0?GRN:RED]],
+      neg=ut<0,y0=neg?170:196,
+      mp=Math.max(1,ing,cf,cvs,1),
+      den=(neg&&Math.abs(ut)>0.0001)?38/Math.abs(ut):1e9,
+      sc=Math.min((y0-26)/mp,den);
+  if(!isFinite(sc)||sc<=0)sc=0.001;
+  var s=ln(16,y0,388,y0,GRY,1.5);
+  d.forEach(function(a,i){
+    var x=28+i*92,v=safe(a[1]),h=Math.abs(v)*sc,y=v>=0?y0-h:y0;
+    if(!isFinite(h))h=0;if(!isFinite(y))y=y0;
+    s+='<rect x="'+x+'" y="'+y+'" width="60" height="'+h+'" rx="3" fill="'+a[2]+'"/>'
+      +tx(x+30,v>=0?y-6:y+h+13,ab(v),'currentColor',12,'middle',700)
+      +tx(x+30,228,a[0],GRY,11,'middle');
+  });
+  return s;
+}
+function ghost(){var g=GH||ORG;return JSON.stringify(g)===JSON.stringify(S)?null:g}
+function semaforo(q){
+  if(q.mc<=0)return{c:RED,t:'🔴 Sin margen: el precio no cubre el costo variable'};
+  if(!isFinite(q.ms))return{c:GRY,t:'⚪ Sin datos suficientes'};
+  if(q.ms<0)return{c:RED,t:'🔴 Por debajo del equilibrio'};
+  if(q.ms<20)return{c:ORA,t:'🟡 Margen de seguridad ajustado ('+num(q.ms)+'%)'};
+  return{c:GRN,t:'🟢 Saludable ('+num(q.ms)+'% de margen de seguridad)'};
+}
+function alertas(q){
+  var f={neg:q.mc<=0,under:q.mc>0&&q.ms<0,low:q.mc>0&&q.ms>=0&&q.ms<10};
+  Object.keys(f).forEach(function(k){
+    if(f[k]&&!ALERTS[k]){var msg={neg:'⚠️ El precio ya no supera el costo variable.',under:'⚠️ Las unidades cayeron por debajo del punto de equilibrio.',low:'⚠️ Margen de seguridad menor al 10%.'}[k];add('b',msg)}
+    ALERTS[k]=f[k];
+  });
+}
+var SUG={neg:['Prueba "precio mínimo".','Di "sube el precio 10%".'],under:['Di "cuántas unidades me faltan".','Prueba "qué pasa si bajo los costos fijos 10%".'],low:['Prueba "sensibilidad".','Di "unidades para ganar" y un monto.'],ok:['Prueba "guarda escenario A".','Di "apalancamiento".','Prueba "qué pasa si subo el precio 5%".']};
+function sugerir(q){var k=q.mc<=0?'neg':q.ms<0?'under':q.ms<10?'low':'ok',arr=SUG[k];SUGI=(SUGI+1)%arr.length;return arr[SUGI]}
+var QT={raf:null,cur:null},LASTDRAWN=null;
+function pararQT(){if(QT.raf){clearInterval(QT.raf);QT.raf=null}}
+var _dibuja=function(){
+  var q=M();kpis(q);
+  var target=JSON.parse(snap());
+  if(ANIM.running||TOUR.running){document.getElementById('ch').innerHTML=main(q,ghost());document.getElementById('c2').innerHTML=util(q);document.getElementById('c3').innerHTML=dona(q);document.getElementById('c4').innerHTML=barras(q);LASTDRAWN=target;QT.cur=null;pararQT()}
+  else{
+    var from=QT.cur||LASTDRAWN||target;
+    if(JSON.stringify(from)!==JSON.stringify(target)){
+      pararQT();var t0=null,ms=350;
+      function qf(ts){
+        if(!t0)t0=ts;var p=Math.min(1,(ts-t0)/ms),e=ease(p);
+        var interp={precio:from.precio+(target.precio-from.precio)*e,unidades:from.unidades+(target.unidades-from.unidades)*e,cf:from.cf+(target.cf-from.cf)*e,cv:from.cv+(target.cv-from.cv)*e};
+        QT.cur=interp;var qi=Mof(interp);
+        document.getElementById('ch').innerHTML=main(qi,ghost());
+        document.getElementById('c2').innerHTML=util(qi);
+        document.getElementById('c3').innerHTML=dona(qi);
+        document.getElementById('c4').innerHTML=barras(qi);
+        if(p>=1){clearInterval(QT.raf);QT.raf=null;QT.cur=null;LASTDRAWN=target}
+      }
+      QT.raf=setInterval(function(){qf(Date.now())},16);
+    }else{
+      document.getElementById('ch').innerHTML=main(q,ghost());
+      document.getElementById('c2').innerHTML=util(q);
+      document.getElementById('c3').innerHTML=dona(q);
+      document.getElementById('c4').innerHTML=barras(q);
+      LASTDRAWN=target;
+    }
+  }
+  document.getElementById('c5').innerHTML=tornado(q);
+  var sm=semaforo(q),el=document.getElementById('semtop');el.textContent=sm.t;el.style.background=sm.c+'22';el.style.color=sm.c;
+  alertas(q);
+  /* ✅ FIX 4: no llamar replaceState en file:// (evita el warning de Chrome) */
+  try{localStorage.setItem('pe_dashboard_v1',JSON.stringify(S))}catch(e){}
+};
+dibuja=function(){
+  try{_dibuja()}
+  catch(err){
+    console.error('dibuja() falló:',err);
+    try{
+      var q=M();
+      document.getElementById('ch').innerHTML=main(q,null);
+      document.getElementById('c2').innerHTML=util(q);
+      document.getElementById('c3').innerHTML=dona(q);
+      document.getElementById('c4').innerHTML=barras(q);
+      document.getElementById('c5').innerHTML=tornado(q);
+      var sm=semaforo(q),el=document.getElementById('semtop');
+      el.textContent='⚠️ '+err.message;el.style.background=RED+'22';el.style.color=RED;
+    }catch(e){console.error('fallback dibuja()',e)}
+  }
+};
+/* ✅ FIX 1: manejadores "compara", "oculta fantasma" y "anima" restaurados */
+H.unshift([/anim\w*.*escenario\s*(\w+)?|^anima\b/,function(t,m){var k=((m&&m[1])||LASTCMP||Object.keys(ESC)[0]||'A').toUpperCase();if(!ESC[k])return 'No existe el escenario '+k+'. Primero di "guarda escenario '+k+'".';animar(k);return 'Reproduciendo la transición hacia el escenario '+k+'…'}]);
+H.unshift([/compara\w*.*escenario\s*(\w+)?|^compara\b|^muestra\b.*\bescenario/,function(t,m){
+  var k=((m&&m[1])||LASTCMP||Object.keys(ESC)[0]||'A').toUpperCase();
+  if(!ESC[k])return 'No existe el escenario '+k+'. Primero di "guarda escenario '+k+'".';
+  GH=JSON.parse(ESC[k]);LASTCMP=k;
+  var a=M(),sv=snap();apply(GH);var e=M();apply(JSON.parse(sv));
+  showAnimBtn();
+  return 'Comparando con el escenario '+k+' (líneas punteadas grises en la gráfica principal):\nEquilibrio: '+num(a.pe)+' vs '+num(e.pe)+' unidades\nUtilidad: '+fmt(a.ut)+' vs '+fmt(e.ut)+'\n\n💡 Toca "▶ Animar vs Escenario '+k+'" arriba o di "anima el escenario '+k+'" para ver el bucle.';
+}]);
+H.unshift([/(quita|oculta|limpia)\w* .*(fantasma|comparacion|referencia|ghost)/,function(){GH=null;dibuja();return 'Comparación restablecida contra los valores actuales.'}]);
+var vz=document.getElementById('voz');
+function rv(){vz.textContent=VOZ?'🔊 Voz ON':'🔇 Voz OFF'}
+vz.onclick=function(){VOZ=!VOZ;if(!VOZ&&window.speechSynthesis)speechSynthesis.cancel();rv();add('b',VOZ?'Voz activada.':'Voz desactivada.')};
+VOZ=true;rv();
+var add1=add;add=function(c,x){if(c==='b'&&x.length>350){var v=VOZ;VOZ=false;add1(c,x);VOZ=v}else add1(c,x)};
+var HC={Ajustar:['Sube el precio 10%','Baja costos fijos 5000','Pon unidades en 1500','Duplica unidades','Precio con margen de 30'],Consultar:['Punto de equilibrio','Estoy ganando o perdiendo','Margen de seguridad','Cuántas unidades me faltan','Resumen completo'],Objetivos:['Unidades para ganar 20000','Precio para ganar 20000','Precio mínimo','Costo variable máximo','Costos fijos máximos'],Analizar:['Qué pasa si subo el precio 10%','Sensibilidad','Cuánto he cambiado','Apalancamiento'],Escenarios:['Guarda escenario A','Compara con escenario A','Anima el escenario A','Carga escenario A','Escenarios'],Control:['Deshacer','Rehacer','Reinicia','Modo oscuro','Silencio','Ayuda'],Recorrido:['Recorrido guiado']},act='Ajustar',tabs=document.getElementById('tabs'),ph=document.getElementById('ph');
+function rh(){tabs.innerHTML='';Object.keys(HC).forEach(function(k){var b=document.createElement('button');b.textContent=k;if(k===act)b.className='on';b.onclick=function(){act=k;rh()};tabs.appendChild(b)});var a=document.createElement('button');a.textContent='❓ Ver todo';a.onclick=function(){send('ayuda')};tabs.appendChild(a);ph.innerHTML='';HC[act].forEach(function(p){var b=document.createElement('button');b.textContent=p;b.onclick=function(){send(p)};ph.appendChild(b)})}
+rh();
+var EJ=['sube el precio 10%','estoy ganando o perdiendo','qué pasa si bajo los costos fijos 5000','unidades para ganar 20000','compara con el escenario A'],ei=0;
+setInterval(function(){if(!LISTEN&&document.activeElement!==ci){ei=(ei+1)%EJ.length;ci.placeholder='Prueba: '+EJ[ei]}},4000);
+window.addEventListener('error',function(e){try{add0('b','⚠️ Error técnico: '+e.message+' (línea '+e.lineno+')')}catch(x){}});
+dibuja();
+</script>
+</body>
+</html>

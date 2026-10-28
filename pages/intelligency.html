@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Dashboard Corporativo | Rigo Finance V3.4</title>
+  <link rel="stylesheet" href="../css/global.css">
+  
+  <style>
+    /* Forzamos el modo oscuro absoluto en la sección principal */
+    main.section {
+      background: #0b0f19 !important;
+      color: #fafaf6 !important;
+      min-height: 100vh !important;
+      padding: 40px 20px !important;
+      box-sizing: border-box !important;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    }
+    
+    /* Contenedor de Pestañas Superiores Estilo Google Sites Premium */
+    .tabs-container {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 30px;
+      border-bottom: 2px solid #1e293b;
+      padding-bottom: 10px;
+      flex-wrap: wrap;
+    }
+    
+    .tab-button {
+      background: #131c2e;
+      color: #94a3b8;
+      border: 1px solid #1e293b;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: 600;
+      font-size: 14px;
+      transition: all 0.2s ease;
+    }
+    
+    .tab-button:hover {
+      background: #1e293b;
+      color: #ffffff;
+    }
+    
+    .tab-button.active-tab {
+      background: #10b981;
+      color: #0b0f19;
+      border-color: #10b981;
+      box-shadow: 0 0 12px rgba(16,185,129,0.3);
+    }
+
+    /* Visor de imagen en pantalla completa (Lightbox) */
+    .lightbox-modal {
+      display: none;
+      position: fixed;
+      z-index: 9999;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(11, 15, 25, 0.97);
+      justify-content: center;
+      align-items: center;
+      cursor: zoom-out;
+    }
+    .lightbox-modal img {
+      max-width: 90%;
+      max-height: 90%;
+      object-fit: contain;
+      border: 2px solid #1e293b;
+      border-radius: 8px;
+      box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 1. Contenedor de Navegación Maestro (¡Obligatorio para navigation.js!) -->
+  <header id="site-header"></header>
+
+  <main class="section">
+    <span class="eyebrow" style="color: #10b981; font-weight: 700; letter-spacing: 1px;">SUITE DE MODELOS</span>
+    <h1 style="color: #fafaf6; font-family: 'Source Serif 4', serif; margin-top: 5px; margin-bottom: 25px;">Panel de Control Financiero</h1>
+    
+    <!-- 🎛️ CONTROL DE PESTAÑAS DINÁMICAS (Estilo tu menú de Google Sites) -->
+    <div class="tabs-container">
+      <button class="tab-button active-tab" onclick="cambiarPestaña('Todos', this)">🎰 Todos los Modelos</button>
+      <button class="tab-button" onclick="cambiarPestaña('Planeación y FP&A', this)">📊 Planeación y FP&A</button>
+      <button class="tab-button" onclick="cambiarPestaña('Rentabilidad y Pricing', this)">🎯 Rentabilidad y Pricing</button>
+      <button class="tab-button" onclick="cambiarPestaña('Fiscal / Contable', this)">💼 Fiscal / Contable</button>
+      <button class="tab-button" onclick="cambiarPestaña('Modelos Especiales', this)">💎 Modelos Especiales</button>
+    </div>
+    
+    <!-- Contenedor único donde el motor inyectará las tarjetas filtradas -->
+    <div class="cards" style="display: flex; flex-direction: column; width: 100%; max-width: 1200px; margin: 0 auto; gap: 25px;"></div>
+  </main>
+
+  <!-- Visor interactivo flotante para ver el mapa en grande -->
+  <div id="mapa-lightbox" class="lightbox-modal" onclick="this.style.display='none'">
+    <img id="mapa-lightbox-img" src="" alt="Mapa Conceptual Ampliado">
+  </div>
+
+  <footer id="site-footer"></footer>
+
+  <!-- ==================== CABLES DE INICIALIZACIÓN V3.4 ==================== -->
+  <script src="../js/navigation.js"></script>
+  <script src="../js/supabase-local.js"></script>
+
+  <script>
+    const SUPABASE_URL = "https://tktomsbcxyaotgbbqszt.supabase.co";
+    const SUPABASE_ANON_KEY = "sb_publishable_EYgWbGKyDFrp1vImvcsCAw_CFJfxOpQ";
+    
+    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+      auth: { persistSession: false, autoRefreshToken: false }
+    });
+  </script>
+
+  <!-- El motor dinámico receptor anti-caché -->
+  <script>
+    const script = document.createElement('script');
+    script.src = "../js/intelligency.js?t=" + String(new Date().getTime());
+    document.body.appendChild(script);
+  </script>
+
+</body>
+</html>
+

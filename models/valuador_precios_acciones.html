@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Valuador de Precios con Métricas</title>
+<style>
+:root{--bg:#eef1f4;--card:#fff;--ink:#1b2733;--mut:#5d6b78;--line:#d5dce3;--ok:#0f766e;--warn:#b7791f;--bad:#b3261e;--acc:#1f4e79;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#10171e;--card:#18222c;--ink:#e6edf3;--mut:#9aa8b5;--line:#2b3946;--ok:#3cc4b4;--warn:#e0b04f;--bad:#ff7b72;--acc:#7fb2e5}}
+:root[data-theme="dark"]{--bg:#10171e;--card:#18222c;--ink:#e6edf3;--mut:#9aa8b5;--line:#2b3946;--ok:#3cc4b4;--warn:#e0b04f;--bad:#ff7b72;--acc:#7fb2e5}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 "Segoe UI",system-ui,sans-serif}
+main{max-width:1000px;margin:0 auto;padding:20px 16px 40px}
+h1{font:700 1.7rem/1.2 Georgia,serif;margin:0 0 6px}
+h2{font:700 1.1rem Georgia,serif;margin:0 0 10px}
+.sub{color:var(--mut);margin:0 0 14px;max-width:70ch}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tabs button,.nav button{padding:8px 16px;border:1px solid var(--line);border-radius:6px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.tabs button.on,.nav button.pri{background:var(--acc);color:#fff;border-color:var(--acc)}
+.nav button:disabled{opacity:.4;cursor:default}
+.nav{display:flex;justify-content:space-between;margin-top:14px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.grid{grid-template-columns:1fr}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:16px;margin-bottom:16px}
+.f{display:grid;grid-template-columns:1fr 110px;gap:8px;align-items:center;margin-bottom:8px;font-size:.92rem}
+input[type=number]{width:100%;padding:6px 8px;border:1px solid var(--line);border-radius:4px;background:var(--bg);color:var(--ink);font:inherit;text-align:right}
+.q{display:flex;gap:10px;align-items:flex-start;padding:7px 0;border-top:1px solid var(--line);font-size:.92rem;cursor:pointer}
+.q input{margin-top:4px;width:18px;height:18px;accent-color:var(--bad);flex:none}
+.pill{font-size:.82rem;color:var(--mut)}
+.bar{height:8px;background:var(--line);border-radius:4px;overflow:hidden;margin:4px 0 10px}
+.bar i{display:block;height:100%;background:var(--warn);transition:width .2s}
+table{width:100%;border-collapse:collapse;font-size:.92rem}
+td,th{padding:6px 4px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+.verd{padding:14px;border-radius:6px;font-weight:600;border-left:6px solid var(--acc);background:var(--bg);margin-top:10px}
+.big{font:700 1.8rem Georgia,serif}
+.row{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:12px}
+.row div{min-width:130px}.row span{display:block;font-size:.8rem;color:var(--mut)}
+.opt{display:block;width:100%;text-align:left;margin:8px 0;padding:10px 12px;border:1px solid var(--line);border-radius:6px;background:var(--bg);color:var(--ink);font:inherit;cursor:pointer}
+.opt.ok{border-color:var(--ok);border-width:2px}.opt.no{border-color:var(--bad);border-width:2px}
+.fb{margin-top:10px;padding:10px 12px;border-left:5px solid var(--acc);background:var(--bg);font-size:.92rem}
+.lnk{background:none;border:0;color:var(--acc);cursor:pointer;font:inherit;padding:0;text-decoration:underline}
+[hidden]{display:none!important}
+small{color:var(--mut)}
+</style>
+</head>
+<body>
+<main>
+<h1>Valuador de Precios con Métricas</h1>
+<p class="sub">Entrena tu criterio con el cuestionario y luego evalúa una empresa real: el valuador castiga la WACC con 3% a 5% extra si reprueba métricas, materialidad o gobierno corporativo.</p>
+<div class="tabs"><button id="t0" class="on">1. Cuestionario de criterio</button><button id="t1">2. Valuador</button></div>
+
+<section id="v0"><div class="card" id="quiz"></div></section>
+
+<section id="v1" hidden><div class="grid">
+<div>
+<div class="card"><h2>Datos de la empresa</h2><div id="inputs"></div></div>
+<div class="card"><h2>Resultado</h2><div id="res"></div></div>
+</div>
+<div class="card"><h2>Checklist de la empresa</h2><p class="pill">Marca cada situación que observes en la empresa que analizas.</p><div id="chk"></div></div>
+</div></section>
+<p><small>Herramienta educativa con datos que tú capturas. No es asesoría financiera; consulta a un profesional antes de invertir.</small></p>
+</main>
+<script>
+const $=id=>document.getElementById(id),fm=(x,d=0)=>x.toLocaleString('es-MX',{minimumFractionDigits:d,maximumFractionDigits:d});
+const P=['Métricas financieras','Materialidad y sustancia económica','Gobierno corporativo'];
+// [pilar, pregunta, opciones, correcta, explicación, sugerencia]
+const QZ=[
+[0,'Los ingresos netos suben, pero las cuentas por cobrar crecen mucho más rápido que las ventas. ¿Qué riesgo sugiere?',['Manejo conservador del efectivo que mejora la liquidez','Menor riesgo de impago de los clientes principales','Reparto anticipado de dividendos extraordinarios','Reconocimiento agresivo de ingresos: ventas registradas que aún no se convierten en efectivo'],3,'Las ventas contabilizadas sin cobro generan una brecha peligrosa, síntoma típico de manipulación para cumplir expectativas del mercado.','Compara lo que se muestra como ganado en el estado de resultados con el dinero que realmente entra a caja.'],
+[0,'Una empresa reporta utilidades altas y crecientes cinco años seguidos, pero su flujo de caja libre es negativo. ¿Qué conclusión es más prudente?',['Es normal en empresas sanas que reinvierten todo','La calidad de las utilidades es baja: dependen de devengos y no de efectivo','El flujo libre no importa si la utilidad crece','La empresa está pagando demasiados impuestos'],1,'Utilidades que no se convierten en efectivo de forma sostenida son una señal clásica de baja calidad contable. Por eso el valuador parte del flujo de caja libre.','Pregúntate si las utilidades de esos años alguna vez se pudieron gastar.'],
+[0,'Una empresa empieza a capitalizar como activo gastos que antes llevaba a resultados (por ejemplo, mantenimiento). ¿Qué efecto tiene?',['Infla artificialmente el EBITDA y la utilidad del periodo','Reduce la utilidad y los impuestos de forma legítima','No cambia nada porque el efectivo es el mismo','Mejora el flujo de caja libre real'],0,'Capitalizar gastos los saca del estado de resultados y los manda al balance. El EBITDA luce mejor, pero el efectivo salió igual.','Fíjate en qué renglón aparece el desembolso: resultados o inversión.'],
+[0,'Los inventarios crecen mucho más rápido que las ventas por varios trimestres. ¿Qué podría estar pasando?',['Mayor eficiencia logística','Gran disponibilidad de efectivo','Demanda débil u obsolescencia que podría obligar a castigos futuros','Reducción de costos de operación'],2,'Inventario que se acumula sin venderse puede ocultar productos obsoletos y futuras provisiones que golpearán la utilidad.','Piensa en qué pasa con un producto que nadie compra.'],
+[0,'La empresa alarga la vida útil de sus activos fijos sin cambio operativo que lo justifique. ¿Qué efecto tiene?',['Aumenta su gasto en efectivo','Reduce el valor de sus activos','Es irrelevante para el análisis','Reduce la depreciación y sube la utilidad contable sin generar un peso más de efectivo'],3,'Es un cambio de estimación que mejora la utilidad sin efecto en caja. Cuando coincide con resultados débiles, es una alerta.','Menos depreciación significa más utilidad en el papel.'],
+[1,'Una proveedora factura millones por servicios, pero no tiene empleados, oficinas ni activos. ¿Qué riesgo fiscal indica?',['Falta de materialidad: operaciones simuladas, con riesgo de lista 69-B del SAT y gastos no deducibles','Una estrategia de outsourcing normal','Un beneficio fiscal por contratar a terceros','Un riesgo cambiario'],0,'Sin capacidad real para prestar el servicio, el SAT puede considerar la operación inexistente: se pierde la deducción y puede haber consecuencias penales.','Pregúntate quién y con qué medios presta realmente el servicio.'],
+[1,'Una operación compleja entre empresas del grupo no tiene otro propósito claro que reducir el pago de impuestos. ¿Cómo se ve ante la autoridad?',['Como planeación fiscal siempre válida','Como un ajuste contable menor','Como una operación sin razón de negocio, que el SAT puede recaracterizar','Como una inversión estratégica'],2,'El art. 5-A del CFF permite recaracterizar actos cuyo beneficio económico sea menor al beneficio fiscal. Esto puede traducirse en contingencias importantes.','¿La operación tendría sentido si no existieran los impuestos?'],
+[1,'Una empresa paga regalías o servicios intangibles a una afiliada en un paraíso fiscal. ¿Qué debes revisar con más cuidado?',['Solo el tipo de cambio','Precios de transferencia y si la afiliada tiene sustancia real','El color del logotipo de la marca','Solo que exista la factura'],1,'Pagos a partes relacionadas en jurisdicciones de baja imposición son una vía clásica para sacar utilidades. Requieren estudio de precios de transferencia y sustancia.','Compara el precio pactado con el que cobraría un tercero independiente.'],
+[1,'Más de la mitad de los ingresos de una empresa viene de una sola contraparte relacionada. ¿Cuál es el principal problema?',['Ninguno, es un cliente estable','Menor costo de ventas','Facilidad de cobranza','Circularidad y concentración: los ingresos pueden no reflejar demanda real del mercado'],3,'Si el cliente es parte relacionada, los ingresos pueden ser decididos por el grupo y no por el mercado, y desaparecer o ajustarse por el SAT.','Imagina qué pasa si el grupo cambia de opinión.'],
+[1,'La empresa tiene un juicio fiscal con el SAT por un monto muy relevante y no registra provisión ni revela nada. ¿Qué implica?',['Pasivo contingente no reconocido que puede destruir valor y el resultado no lo refleja','Un buen manejo de liquidez','Que la empresa casi seguro ganará el caso','Una ventaja fiscal'],0,'Las contingencias probables deben provisionarse y las posibles revelarse. Ignorarlas sobrevalora la empresa.','Piensa en la deuda que no aparece en el balance.'],
+[2,'El consejo de administración está formado casi en su totalidad por familiares y directivos del accionista controlador. ¿Qué riesgo plantea?',['Mayor rapidez en las decisiones, sin riesgo relevante','Falta de independencia: nadie vigila al controlador en favor de los minoritarios','Menores costos de honorarios','Mejor control del riesgo'],1,'Sin consejeros independientes, el control interno pierde contrapesos y las decisiones pueden beneficiar al controlador.','Pregúntate quién puede decirle que no al accionista mayoritario.'],
+[2,'La empresa presta dinero a la controladora a tasas muy inferiores a las de mercado y sin garantías. ¿Qué es?',['Una política de tesorería eficiente','Diversificación de inversiones','Una transferencia de valor del minoritario al controlador (tunneling)','Un beneficio para todos los accionistas'],2,'Operaciones con partes relacionadas fuera de condiciones de mercado extraen valor de la empresa en perjuicio de los minoritarios.','¿Un banco prestaría en esas condiciones a un tercero?'],
+[2,'El auditor externo renuncia a media auditoría o emite una opinión con salvedades. ¿Cómo debe interpretarse?',['Un trámite administrativo sin importancia','Una buena práctica de rotación','Un cambio de costos de la auditoría','Una alerta grave sobre la confiabilidad de la información financiera'],3,'La renuncia o salvedad del auditor suele anticipar problemas contables serios. Es una de las alertas más fuertes.','Piensa en quién conoce mejor los libros después de la administración.'],
+[2,'Una empresa mantiene muchas entidades de propósito especial fuera de balance que concentran deuda y pérdidas. ¿Con qué se relaciona?',['Con el esquema que ocultó deuda en Enron y destruyó a sus accionistas','Con una estrategia común y transparente','Con un menor riesgo financiero','Con mayor liquidez'],0,'Enron usó vehículos fuera de balance para esconder deuda y pérdidas. Cuando salió a la luz, el valor se evaporó.','Busca dónde está la deuda que no ves en el balance.'],
+[2,'La empresa retrasa reportes trimestrales, reexpresa cifras seguido y da poca información a minoritarios. ¿Qué indica?',['Eficiencia administrativa','Opacidad: dificulta valuar y es señal de posibles problemas que se están ocultando','Cumplimiento ejemplar','Bajo riesgo de gobierno corporativo'],1,'La transparencia es la base de la valuación. Si no puedes confiar en los números ni en su puntualidad, exige un descuento mayor.','Una empresa sana suele querer que el mercado la entienda.']
+];
+let qi=0,ans=Array(QZ.length).fill(null);
+function qr(){
+ if(qi>=QZ.length){const sc=[0,0,0],tt=[0,0,0];QZ.forEach((q,i)=>{tt[q[0]]++;if(ans[i]===q[3])sc[q[0]]++});const tot=sc.reduce((a,b)=>a+b,0);
+ const lv=tot>=13?'Criterio sólido para detectar bombas de tiempo.':tot>=9?'Buen criterio, repasa las preguntas que fallaste.':'Repasa los conceptos antes de invertir tu dinero.';
+ $('quiz').innerHTML=`<h2>Resultado: ${tot} de ${QZ.length}</h2><p>${lv}</p>`+P.map((p,i)=>`<div>${p}: ${sc[i]} de ${tt[i]}</div><div class="bar"><i style="width:${sc[i]/tt[i]*100}%;background:var(--ok)"></i></div>`).join('')+`<div class="nav"><button id="rs">Repetir</button><button class="pri" id="gv">Ir al valuador</button></div>`;
+ $('rs').onclick=()=>{qi=0;ans.fill(null);qr()};$('gv').onclick=()=>tab(1);return}
+ const q=QZ[qi],a=ans[qi];
+ $('quiz').innerHTML=`<div class="pill">${qi+1} / ${QZ.length} · ${P[q[0]]}</div><div class="bar"><i style="width:${(qi+1)/QZ.length*100}%;background:var(--acc)"></i></div><h2>${q[1]}</h2>`+
+ q[2].map((o,i)=>`<button class="opt ${a!==null?(i===q[3]?'ok':i===a?'no':''):''}" data-i="${i}" ${a!==null?'disabled':''}><b>${'ABCD'[i]}.</b> ${o}</button>`).join('')+
+ `<button class="lnk" id="hb">Mostrar sugerencia</button><div class="fb" id="hn" hidden>${q[5]}</div>`+
+ (a!==null?`<div class="fb"><b>${a===q[3]?'¡Correcto!':'Incorrecto.'}</b> ${q[4]}</div>`:'')+
+ `<div class="nav"><button id="bk" ${qi?'':'disabled'}>Atrás</button><button class="pri" id="nx" ${a===null?'disabled':''}>${qi==QZ.length-1?'Ver resultado':'Siguiente'}</button></div>`;
+ document.querySelectorAll('.opt').forEach(b=>b.onclick=()=>{ans[qi]=+b.dataset.i;qr()});
+ $('hb').onclick=()=>$('hn').hidden=!$('hn').hidden;$('bk').onclick=()=>{qi--;qr()};$('nx').onclick=()=>{qi++;qr()}}
+qr();
+// Valuador
+const F=[['fcf','Flujo de caja libre actual (mdp)',1200],['g','Crecimiento anual FCF, años 1 a 5 (%)',8],['gt','Crecimiento terminal (%)',3.5],['w','WACC base (%)',11],['d','Deuda neta (mdp)',5000],['n','Acciones en circulación (millones)',600],['p','Precio de mercado por acción ($)',38],['m','Margen de seguridad deseado (%)',25]];
+const CK=[
+[['CxC crecen mucho más rápido que las ventas',1],['Utilidad neta sube pero el flujo operativo no la acompaña',1],['Flujo de caja libre negativo o muy por debajo de la utilidad varios años',1],['Deuda neta / EBITDA mayor a 3 veces',.75],['Gastos capitalizados de forma agresiva o cambios de vida útil',.75],['Inventarios crecen mucho más que las ventas',.5],['Márgenes en caída mientras los ingresos crecen',.5],['Reexpresiones o cambios frecuentes de políticas contables',.75]],
+[['Operaciones importantes con partes relacionadas sin razón de negocio',1],['Proveedores en listas del SAT (art. 69-B, EFOS)',1],['Activos y empleados no cuadran con el volumen de ingresos',.75],['Litigios o créditos fiscales relevantes con el SAT',1],['Contingencias fiscales sin provisión ni revelación',.75],['Pagos a afiliadas en paraísos fiscales sin sustancia',.75],['Más de la mitad de ingresos de una sola parte relacionada',.5],['Estructura societaria compleja sin justificación',.5]],
+[['Consejo sin mayoría de consejeros independientes',.75],['Pleitos o abusos documentados contra minoritarios',1],['Préstamos o transacciones al controlador fuera de mercado',1],['Auditor renunció o emitió salvedades',1],['Mismo auditor por muchos años u honorarios altos por otros servicios',.5],['Entidades fuera de balance que concentran deuda o pérdidas',1],['Reportes tardíos, opacos o poca información a minoritarios',.75],['Control en un accionista con operaciones que lo benefician',.75]]];
+$('inputs').innerHTML=F.map(([k,l,v])=>`<label class="f">${l}<input type="number" step="any" id="${k}" value="${v}"></label>`).join('');
+$('chk').innerHTML=CK.map((s,i)=>`<h2 style="margin-top:14px">${P[i]}</h2><div class="bar"><i id="b${i}"></i></div>`+s.map(q=>`<label class="q"><input type="checkbox" data-w="${q[1]}" data-s="${i}">${q[0]}</label>`).join('')).join('');
+const MAX=CK.flat().reduce((a,q)=>a+q[1],0);
+function dcf(f0,g,gt,w,d,n){let v=0,f=f0;for(let t=1;t<=5;t++){f*=1+g;v+=f/Math.pow(1+w,t)}
+ const tv=f*(1+gt)/(w-gt)/Math.pow(1+w,5);v+=tv;const eq=v-d;return{ev:v,eq,ps:eq/n,tvp:tv/v}}
+function calc(){
+ const v=k=>parseFloat($(k).value)||0,fcf=v('fcf'),g=v('g')/100,gt=v('gt')/100,w=v('w')/100,d=v('d'),n=v('n')||1,p=v('p'),m=v('m')/100;
+ const sc=[0,0,0];document.querySelectorAll('.q input:checked').forEach(c=>sc[c.dataset.s]+=+c.dataset.w);
+ CK.forEach((s,i)=>{const mx=s.reduce((a,q)=>a+q[1],0);$('b'+i).style.width=(sc[i]/mx*100)+'%'});
+ const risk=sc.reduce((a,b)=>a+b,0)/MAX,pen=risk<.15?0:3+2*Math.min(1,(risk-.15)/.45),wa=w+pen/100;
+ if(wa<=gt){$('res').innerHTML='<div class="verd" style="border-color:var(--bad)">El crecimiento terminal debe ser menor que la WACC ajustada.</div>';return}
+ const a=dcf(fcf,g,gt,w,d,n),b=dcf(fcf,g,gt,wa,d,n),max=Math.max(0,b.ps)*(1-m);
+ const col=pen==0?'var(--ok)':pen<4?'var(--warn)':'var(--bad)';let vd,vc;
+ if(b.ps<=0){vd='El valor del capital es cero o negativo con esta tasa. No inviertas.';vc='var(--bad)'}
+ else if(p<=max){vd=`Comprable: el precio está ${fm((1-p/max)*100)}% por debajo de tu precio máximo.`;vc='var(--ok)'}
+ else if(p<=b.ps){vd='Barata frente al valor ajustado, pero sin el margen de seguridad que pediste. Espera un mejor precio.';vc='var(--warn)'}
+ else{vd=`Cara: el mercado paga ${fm((p/b.ps-1)*100)}% más que su valor intrínseco ajustado por riesgo.`;vc='var(--bad)'}
+ $('res').innerHTML=`<div class="row"><div><span>Riesgo detectado</span><b style="color:${col}">${fm(risk*100)}%</b></div><div><span>Castigo a la WACC</span><b style="color:${col}">+${fm(pen,2)} pp</b></div><div><span>WACC aplicada</span><b>${fm(wa*100,2)}%</b></div></div>
+ <div class="row"><div><span>Precio máximo a pagar</span><span class="big">$${fm(max,2)}</span></div></div>
+ <table><tr><th></th><th>Sin castigo</th><th>Con castigo</th></tr>
+ <tr><td>WACC</td><td>${fm(w*100,2)}%</td><td>${fm(wa*100,2)}%</td></tr>
+ <tr><td>Valor empresa (mdp)</td><td>${fm(a.ev)}</td><td>${fm(b.ev)}</td></tr>
+ <tr><td>Valor capital (mdp)</td><td>${fm(a.eq)}</td><td>${fm(b.eq)}</td></tr>
+ <tr><td>Valor por acción</td><td>$${fm(a.ps,2)}</td><td>$${fm(b.ps,2)}</td></tr>
+ <tr><td>Precio de mercado</td><td colspan="2">$${fm(p,2)}</td></tr></table>
+ <p class="pill">El valor terminal pesa ${fm(b.tvp*100)}% del valor de la empresa con castigo.</p>
+ <div class="verd" style="border-color:${vc}">${vd}</div>
+ <p class="pill">Regla: con menos de 15% de riesgo no hay castigo. Desde 15% sube de 3 pp hasta 5 pp, que se alcanza con 60% de riesgo o más.</p>`}
+document.addEventListener('input',calc);calc();
+function tab(i){$('v0').hidden=i!=0;$('v1').hidden=i!=1;$('t0').className=i?'':'on';$('t1').className=i?'on':''}
+$('t0').onclick=()=>tab(0);$('t1').onclick=()=>tab(1);
+</script>
+</body>
+</html>

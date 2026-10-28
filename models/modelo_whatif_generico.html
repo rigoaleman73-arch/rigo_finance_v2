@@ -1,0 +1,803 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Modelo What-If Genérico · Evaluación de Proyecto</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Spectral:wght@400;500;600;700&family=Spectral:ital@1&family=Source+Sans+3:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --paper:#F1E9D8;
+    --card:#FBF7ED;
+    --card-2:#F7F0E1;
+    --ink:#1E2A38;
+    --ink-soft:#4B5A6A;
+    --hairline:#CBBD9F;
+    --hairline-strong:#A6976F;
+    --gold:#B08328;
+    --gold-deep:#8A6620;
+    --green:#2F5233;
+    --green-bg:#E4ECDE;
+    --red:#8C2F2F;
+    --red-bg:#F3DEDA;
+    --font-head:'Spectral', Georgia, 'Times New Roman', serif;
+    --font-body:'Source Sans 3', -apple-system, Segoe UI, sans-serif;
+    --font-num:'IBM Plex Mono', 'SFMono-Regular', Consolas, monospace;
+  }
+  :root:not([data-theme="light"]) {
+    @media (prefers-color-scheme: dark) {
+      --paper:#171310;
+      --card:#221C17;
+      --card-2:#2A231C;
+      --ink:#EDE3D0;
+      --ink-soft:#B8A98C;
+      --hairline:#4A4030;
+      --hairline-strong:#6B5D42;
+      --gold:#D9A63E;
+      --gold-deep:#F0C468;
+      --green:#8FBF97;
+      --green-bg:#233024;
+      --red:#E39B93;
+      --red-bg:#3A2320;
+    }
+  }
+  :root[data-theme="dark"]{
+    --paper:#171310;
+    --card:#221C17;
+    --card-2:#2A231C;
+    --ink:#EDE3D0;
+    --ink-soft:#B8A98C;
+    --hairline:#4A4030;
+    --hairline-strong:#6B5D42;
+    --gold:#D9A63E;
+    --gold-deep:#F0C468;
+    --green:#8FBF97;
+    --green-bg:#233024;
+    --red:#E39B93;
+    --red-bg:#3A2320;
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:var(--font-body);
+    line-height:1.5;
+    padding:28px 16px 60px;
+    min-height:100vh;
+  }
+  .wrap{max-width:1080px;margin:0 auto;}
+
+  /* Header */
+  header{
+    border-top:3px double var(--hairline-strong);
+    border-bottom:1px solid var(--hairline-strong);
+    padding:18px 4px 16px;
+    margin-bottom:22px;
+    display:flex; flex-wrap:wrap; gap:12px;
+    justify-content:space-between; align-items:flex-end;
+  }
+  header .titles h1{
+    font-family:var(--font-head);
+    font-weight:600;
+    font-size:1.7rem;
+    margin:0 0 4px;
+    letter-spacing:.2px;
+  }
+  header .titles p{
+    margin:0; color:var(--ink-soft); font-size:.92rem; max-width:52ch;
+  }
+  .print-btn{
+    font-family:var(--font-body);
+    font-size:.82rem;
+    background:transparent;
+    border:1px solid var(--hairline-strong);
+    color:var(--ink);
+    padding:8px 14px;
+    cursor:pointer;
+    white-space:nowrap;
+  }
+  .print-btn:hover{ border-color:var(--gold); color:var(--gold-deep); }
+
+  /* Intro / guía */
+  .guide{
+    display:grid; grid-template-columns:repeat(3,1fr); gap:14px;
+    margin-bottom:26px;
+  }
+  .guide-card{
+    background:var(--card); border:1px solid var(--hairline);
+    padding:14px 16px;
+  }
+  .guide-card b{
+    font-family:var(--font-head); font-size:.98rem; display:block; margin-bottom:5px; color:var(--gold-deep);
+  }
+  .guide-card span{ font-size:.84rem; color:var(--ink-soft); }
+
+  /* Tabs */
+  nav.tabs{
+    display:flex; gap:2px; border-bottom:1px solid var(--hairline-strong);
+    margin-bottom:24px; flex-wrap:wrap;
+  }
+  nav.tabs button{
+    font-family:var(--font-head); font-size:.95rem;
+    background:var(--card-2); color:var(--ink-soft);
+    border:1px solid var(--hairline); border-bottom:none;
+    padding:9px 20px 8px; cursor:pointer;
+    position:relative; top:1px;
+  }
+  nav.tabs button.active{
+    background:var(--card); color:var(--ink); border-color:var(--hairline-strong);
+    font-weight:600;
+  }
+  nav.tabs button:hover:not(.active){ color:var(--ink); }
+
+  .panel{ display:none; }
+  .panel.active{ display:block; }
+
+  /* Sections / cards */
+  .section-title{
+    font-family:var(--font-head); font-size:1.05rem; font-weight:600;
+    margin:0 0 14px; padding-bottom:8px; border-bottom:1px solid var(--hairline);
+  }
+  .grid-2{ display:grid; grid-template-columns:1fr 1fr; gap:26px; }
+
+  .slider-block{ margin-bottom:20px; }
+  .slider-block label{
+    display:flex; justify-content:space-between; align-items:baseline;
+    font-size:.86rem; color:var(--ink-soft); margin-bottom:6px;
+  }
+  .slider-block label .val{
+    font-family:var(--font-num); font-weight:600; color:var(--ink); font-size:.92rem;
+  }
+  input[type="range"]{
+    width:100%; -webkit-appearance:none; appearance:none;
+    height:3px; background:var(--hairline-strong); outline:none; margin:0;
+  }
+  input[type="range"]::-webkit-slider-thumb{
+    -webkit-appearance:none; width:15px; height:15px; border-radius:50%;
+    background:var(--gold); border:2px solid var(--card); cursor:pointer;
+    box-shadow:0 0 0 1px var(--gold-deep);
+  }
+  input[type="range"]::-moz-range-thumb{
+    width:13px; height:13px; border-radius:50%; background:var(--gold);
+    border:2px solid var(--card); cursor:pointer; box-shadow:0 0 0 1px var(--gold-deep);
+  }
+
+  /* KPI cards */
+  .kpis{ display:grid; grid-template-columns:repeat(auto-fit,minmax(190px,1fr)); gap:12px; margin-bottom:26px; }
+  .kpi{
+    background:var(--card); border:1px solid var(--hairline); padding:14px 16px;
+    border-top:3px solid var(--gold);
+  }
+  .kpi .lbl{ font-size:.78rem; color:var(--ink-soft); margin-bottom:6px; }
+  .kpi .num{ font-family:var(--font-num); font-size:1.28rem; font-weight:600; }
+  .kpi .num.neg{ color:var(--red); }
+  .kpi .num.pos{ color:var(--green); }
+
+  .chart-box{
+    background:var(--card); border:1px solid var(--hairline); padding:18px; margin-bottom:10px;
+  }
+  .chart-box h3{ font-family:var(--font-head); font-size:.98rem; margin:0 0 12px; font-weight:600; }
+  svg text{ font-family:var(--font-num); }
+  .axis-label{ font-family:var(--font-body) !important; }
+
+  /* Sensitivity */
+  .sens-controls{
+    display:flex; gap:18px; flex-wrap:wrap; margin-bottom:18px;
+    background:var(--card); border:1px solid var(--hairline); padding:14px 16px;
+  }
+  .sens-controls div{ display:flex; flex-direction:column; gap:5px; }
+  .sens-controls label{ font-size:.78rem; color:var(--ink-soft); }
+  select{
+    font-family:var(--font-body); font-size:.86rem; padding:6px 8px;
+    background:var(--card-2); color:var(--ink); border:1px solid var(--hairline-strong);
+  }
+  table.heat{ border-collapse:collapse; width:100%; font-family:var(--font-num); font-size:.78rem; }
+  table.heat th, table.heat td{
+    border:1px solid var(--hairline); padding:7px 4px; text-align:center; white-space:nowrap;
+  }
+  table.heat th{ background:var(--card-2); font-family:var(--font-body); font-weight:600; color:var(--ink-soft); font-size:.74rem; }
+  table.heat td.center-cell{ outline:2px solid var(--gold); outline-offset:-2px; }
+  .heat-wrap{ overflow-x:auto; background:var(--card); border:1px solid var(--hairline); padding:16px; }
+  .heat-note{ font-size:.78rem; color:var(--ink-soft); margin-top:10px; }
+
+  /* Scenarios */
+  .scenario-form{
+    display:flex; gap:10px; align-items:center; margin-bottom:20px; flex-wrap:wrap;
+    background:var(--card); border:1px solid var(--hairline); padding:14px 16px;
+  }
+  .scenario-form input[type="text"]{
+    font-family:var(--font-body); font-size:.88rem; padding:8px 10px; flex:1; min-width:180px;
+    background:var(--card-2); border:1px solid var(--hairline-strong); color:var(--ink);
+  }
+  .btn{
+    font-family:var(--font-body); font-size:.85rem; font-weight:600;
+    background:var(--gold); color:#2A1D06; border:none; padding:8px 16px; cursor:pointer;
+  }
+  .btn:hover{ background:var(--gold-deep); }
+  .btn.ghost{
+    background:transparent; color:var(--ink-soft); border:1px solid var(--hairline-strong);
+  }
+  .btn.ghost:hover{ color:var(--red); border-color:var(--red); }
+  table.scenarios{ width:100%; border-collapse:collapse; margin-bottom:26px; font-size:.86rem; }
+  table.scenarios th, table.scenarios td{
+    border-bottom:1px solid var(--hairline); padding:9px 10px; text-align:left;
+  }
+  table.scenarios th{ font-family:var(--font-head); font-weight:600; color:var(--ink-soft); font-size:.8rem; }
+  table.scenarios td.num{ font-family:var(--font-num); text-align:right; }
+  table.scenarios tr.current-row td{ color:var(--gold-deep); font-weight:600; }
+  .empty-msg{ color:var(--ink-soft); font-size:.88rem; padding:20px 0; text-align:center; }
+
+  footer{ margin-top:34px; padding-top:14px; border-top:1px solid var(--hairline); font-size:.78rem; color:var(--ink-soft); }
+
+  @media (max-width:760px){
+    .grid-2{ grid-template-columns:1fr; }
+    .guide{ grid-template-columns:1fr; }
+    header{ flex-direction:column; align-items:flex-start; }
+  }
+  @media print{
+    nav.tabs, .print-btn, .guide{ display:none !important; }
+    .panel{ display:block !important; margin-bottom:30px; }
+    body{ background:#fff; color:#000; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header>
+    <div class="titles">
+      <h1>Modelo What-If Genérico</h1>
+      <p>Plantilla de evaluación de proyecto de inversión: supuestos interactivos, sensibilidad de dos variables y comparación de escenarios.</p>
+    </div>
+    <button class="print-btn" onclick="window.print()">Imprimir / PDF</button>
+  </header>
+
+  <div class="guide">
+    <div class="guide-card">
+      <b>1 · Supuestos</b>
+      <span>Controles deslizantes que representan las variables inciertas del negocio. Cada movimiento recalcula todo el modelo en vivo.</span>
+    </div>
+    <div class="guide-card">
+      <b>2 · Sensibilidad</b>
+      <span>Matriz que cruza dos variables a la vez y muestra el resultado en cada combinación — responde "¿qué tanto me afecta X frente a Y?".</span>
+    </div>
+    <div class="guide-card">
+      <b>3 · Escenarios</b>
+      <span>Guarda combinaciones completas de supuestos con nombre (Optimista, Base, Conservador...) y compáralas lado a lado.</span>
+    </div>
+  </div>
+
+  <nav class="tabs">
+    <button class="tab-btn active" data-tab="supuestos">Supuestos</button>
+    <button class="tab-btn" data-tab="resultados">Resultados</button>
+    <button class="tab-btn" data-tab="sensibilidad">Sensibilidad</button>
+    <button class="tab-btn" data-tab="escenarios">Escenarios</button>
+  </nav>
+
+  <!-- TAB 1: SUPUESTOS -->
+  <section class="panel active" id="tab-supuestos">
+    <div class="grid-2">
+      <div>
+        <div class="section-title">Precio y costos</div>
+        <div id="sliders-precio"></div>
+      </div>
+      <div>
+        <div class="section-title">Volumen y crecimiento</div>
+        <div id="sliders-volumen"></div>
+      </div>
+    </div>
+    <div class="grid-2">
+      <div>
+        <div class="section-title">Inversión y financiamiento</div>
+        <div id="sliders-inversion"></div>
+      </div>
+      <div>
+        <div class="section-title">Horizonte de evaluación</div>
+        <div id="sliders-horizonte"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TAB 2: RESULTADOS -->
+  <section class="panel" id="tab-resultados">
+    <div class="section-title">Indicadores del escenario actual</div>
+    <div class="kpis" id="kpi-container"></div>
+    <div class="chart-box">
+      <h3>Flujo de caja acumulado vs. inversión inicial</h3>
+      <div id="chart-container"></div>
+    </div>
+  </section>
+
+  <!-- TAB 3: SENSIBILIDAD -->
+  <section class="panel" id="tab-sensibilidad">
+    <div class="section-title">Matriz de sensibilidad de dos variables</div>
+    <div class="sens-controls">
+      <div>
+        <label>Variable — eje horizontal</label>
+        <select id="sel-x"></select>
+      </div>
+      <div>
+        <label>Variable — eje vertical</label>
+        <select id="sel-y"></select>
+      </div>
+      <div>
+        <label>Métrica a evaluar</label>
+        <select id="sel-metric"></select>
+      </div>
+    </div>
+    <div class="heat-wrap">
+      <div id="heat-container"></div>
+      <p class="heat-note">Cada celda fija todas las demás variables en su valor actual (pestaña Supuestos) y solo varía las dos seleccionadas ±30% de su rango. La celda marcada en dorado es tu combinación actual.</p>
+    </div>
+  </section>
+
+  <!-- TAB 4: ESCENARIOS -->
+  <section class="panel" id="tab-escenarios">
+    <div class="section-title">Guardar escenario actual</div>
+    <div class="scenario-form">
+      <input type="text" id="scenario-name" placeholder="Nombre del escenario (ej. Optimista, Base, Conservador)">
+      <button class="btn" id="btn-save-scenario">Guardar escenario</button>
+    </div>
+
+    <div class="section-title">Escenarios guardados</div>
+    <div id="scenarios-table-wrap"></div>
+
+    <div class="chart-box" id="scenario-chart-wrap" style="display:none;">
+      <h3>Comparación de utilidad neta acumulada</h3>
+      <div id="scenario-chart"></div>
+    </div>
+  </section>
+
+  <footer>
+    Plantilla genérica de análisis "what-if" — los supuestos, fórmulas y rangos deben adaptarse al caso real de cada modelo antes de usarse para decisiones de negocio. Los escenarios se guardan solo en este navegador.
+  </footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ===================== DEFINICIÓN DE VARIABLES ===================== */
+  const VARS = {
+    price: { label:"Precio de venta unitario", group:"sliders-precio", min:50, max:500, step:5, def:150, fmt:'money' },
+    vc:    { label:"Costo variable unitario", group:"sliders-precio", min:10, max:400, step:5, def:90, fmt:'money' },
+    cf:    { label:"Costos fijos mensuales", group:"sliders-precio", min:5000, max:200000, step:1000, def:40000, fmt:'money' },
+    q0:    { label:"Unidades vendidas — mes 1", group:"sliders-volumen", min:50, max:5000, step:50, def:800, fmt:'unidades' },
+    g:     { label:"Crecimiento mensual de unidades", group:"sliders-volumen", min:-5, max:15, step:0.5, def:2, fmt:'pct' },
+    inv:   { label:"Inversión inicial", group:"sliders-inversion", min:0, max:2000000, step:10000, def:500000, fmt:'money' },
+    wacc:  { label:"Tasa de descuento anual (WACC)", group:"sliders-inversion", min:5, max:30, step:0.5, def:15, fmt:'pct' },
+    n:     { label:"Horizonte de evaluación (meses)", group:"sliders-horizonte", min:6, max:36, step:1, def:24, fmt:'meses' }
+  };
+
+  const METRICS = {
+    netIncomeM1:  { label:"Utilidad neta — mes 1", higherBetter:true, fmt:'money' },
+    finalCum:     { label:"Utilidad neta acumulada al final", higherBetter:true, fmt:'money' },
+    npv:          { label:"VPN del proyecto", higherBetter:true, fmt:'money' },
+    breakEvenUnits:{ label:"Punto de equilibrio (unidades/mes)", higherBetter:false, fmt:'unidades' },
+    paybackMonth: { label:"Periodo de recuperación (meses)", higherBetter:false, fmt:'meses' }
+  };
+
+  let state = {};
+  Object.keys(VARS).forEach(k => state[k] = VARS[k].def);
+
+  /* ===================== FORMATO ===================== */
+  function fmtMoney(n){
+    if(!isFinite(n)) return "—";
+    return "$" + Math.round(n).toLocaleString('es-MX');
+  }
+  function fmtPct(n){ return n.toFixed(1) + "%"; }
+  function fmtUnidades(n){
+    if(!isFinite(n)) return "—";
+    return Math.round(n).toLocaleString('es-MX');
+  }
+  function fmtMeses(n){
+    if(n===null || n===undefined || !isFinite(n)) return "No se recupera";
+    return Math.round(n) + " m";
+  }
+  function fmtByType(v,type){
+    if(type==='money') return fmtMoney(v);
+    if(type==='pct') return fmtPct(v);
+    if(type==='meses') return fmtMeses(v);
+    return fmtUnidades(v);
+  }
+
+  /* ===================== MOTOR DE CÁLCULO ===================== */
+  function calcProjection(inp){
+    const months = [];
+    let cum = 0;
+    let npv = -inp.inv;
+    const monthlyRate = Math.pow(1 + inp.wacc/100, 1/12) - 1;
+    let paybackMonth = null;
+
+    for(let t=1; t<=inp.n; t++){
+      const units = inp.q0 * Math.pow(1 + inp.g/100, t-1);
+      const revenue = inp.price * units;
+      const varCost = inp.vc * units;
+      const contMargin = revenue - varCost;
+      const netIncome = contMargin - inp.cf;
+      cum += netIncome;
+      npv += netIncome / Math.pow(1+monthlyRate, t);
+      if(paybackMonth === null && cum >= inp.inv) paybackMonth = t;
+      months.push({ t, units, revenue, varCost, contMargin, netIncome, cum });
+    }
+    const margin = inp.price - inp.vc;
+    const breakEvenUnits = margin > 0 ? inp.cf / margin : Infinity;
+
+    return {
+      months, margin, breakEvenUnits, npv, paybackMonth,
+      finalCum: cum,
+      netIncomeM1: months.length ? months[0].netIncome : 0
+    };
+  }
+
+  /* ===================== SLIDERS ===================== */
+  function buildSliders(){
+    const groups = {};
+    Object.keys(VARS).forEach(key=>{
+      const v = VARS[key];
+      if(!groups[v.group]) groups[v.group] = [];
+      groups[v.group].push(key);
+    });
+    Object.keys(groups).forEach(groupId=>{
+      const container = document.getElementById(groupId);
+      container.innerHTML = "";
+      groups[groupId].forEach(key=>{
+        const v = VARS[key];
+        const block = document.createElement('div');
+        block.className = 'slider-block';
+        block.innerHTML = `
+          <label>${v.label} <span class="val" id="val-${key}"></span></label>
+          <input type="range" id="slider-${key}" min="${v.min}" max="${v.max}" step="${v.step}" value="${state[key]}">
+        `;
+        container.appendChild(block);
+        const input = block.querySelector('input');
+        input.addEventListener('input', e=>{
+          state[key] = parseFloat(e.target.value);
+          document.getElementById('val-'+key).textContent = fmtByType(state[key], v.fmt);
+          renderAll();
+        });
+        document.getElementById('val-'+key) || null;
+      });
+    });
+    // set initial displayed values
+    Object.keys(VARS).forEach(key=>{
+      const el = document.getElementById('val-'+key);
+      if(el) el.textContent = fmtByType(state[key], VARS[key].fmt);
+    });
+  }
+
+  /* ===================== RESULTADOS (KPIs + chart) ===================== */
+  function renderResultados(){
+    const r = calcProjection(state);
+    const kpiContainer = document.getElementById('kpi-container');
+    const kpis = [
+      { lbl:"Margen de contribución unitario", val: fmtMoney(r.margin), cls: r.margin>=0 ? 'pos':'neg' },
+      { lbl:"Punto de equilibrio (unid./mes)", val: fmtUnidades(r.breakEvenUnits), cls:'' },
+      { lbl:"Utilidad neta — mes 1", val: fmtMoney(r.netIncomeM1), cls: r.netIncomeM1>=0?'pos':'neg' },
+      { lbl:"Utilidad neta acumulada final", val: fmtMoney(r.finalCum), cls: r.finalCum>=0?'pos':'neg' },
+      { lbl:"VPN del proyecto", val: fmtMoney(r.npv), cls: r.npv>=0?'pos':'neg' },
+      { lbl:"Periodo de recuperación", val: fmtMeses(r.paybackMonth), cls: r.paybackMonth!==null?'pos':'neg' }
+    ];
+    kpiContainer.innerHTML = kpis.map(k=>`
+      <div class="kpi">
+        <div class="lbl">${k.lbl}</div>
+        <div class="num ${k.cls}">${k.val}</div>
+      </div>
+    `).join('');
+
+    drawCashFlowChart(r);
+  }
+
+  function drawCashFlowChart(r){
+    const W = 900, H = 320, padL = 70, padR = 24, padT = 20, padB = 40;
+    const container = document.getElementById('chart-container');
+    const points = r.months.map(m=>m.cum);
+    const maxV = Math.max(...points, state.inv, 0);
+    const minV = Math.min(...points, 0);
+    const range = (maxV - minV) || 1;
+
+    const x = i => padL + (i/(r.months.length-1 || 1)) * (W - padL - padR);
+    const y = v => padT + (1 - (v - minV)/range) * (H - padT - padB);
+
+    let path = points.map((v,i)=> (i===0?'M':'L') + x(i).toFixed(1) + ',' + y(v).toFixed(1)).join(' ');
+    const zeroY = y(0).toFixed(1);
+    const invY = y(state.inv).toFixed(1);
+
+    // gridlines (4 horizontal)
+    let grid = '';
+    for(let g=0; g<=4; g++){
+      const gy = padT + g*(H-padT-padB)/4;
+      const gv = maxV - g*(range/4);
+      grid += `<line x1="${padL}" y1="${gy.toFixed(1)}" x2="${W-padR}" y2="${gy.toFixed(1)}" stroke="var(--hairline)" stroke-width="1"/>`;
+      grid += `<text x="${padL-8}" y="${(gy+4).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--ink-soft)">${fmtMoney(gv)}</text>`;
+    }
+
+    // x labels (every ~4 months)
+    let xlabels = '';
+    const step = Math.max(1, Math.round(r.months.length/8));
+    r.months.forEach((m,i)=>{
+      if(i % step === 0 || i === r.months.length-1){
+        xlabels += `<text x="${x(i).toFixed(1)}" y="${H-padB+16}" text-anchor="middle" font-size="10" fill="var(--ink-soft)">m${m.t}</text>`;
+      }
+    });
+
+    const svg = `
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%; height:auto; display:block;">
+      ${grid}
+      <line x1="${padL}" y1="${zeroY}" x2="${W-padR}" y2="${zeroY}" stroke="var(--ink-soft)" stroke-width="1.2"/>
+      ${state.inv>0 ? `<line x1="${padL}" y1="${invY}" x2="${W-padR}" y2="${invY}" stroke="var(--red)" stroke-width="1" stroke-dasharray="4,3"/>
+      <text x="${W-padR}" y="${(parseFloat(invY)-6).toFixed(1)}" text-anchor="end" font-size="10" fill="var(--red)" class="axis-label">Inversión inicial</text>` : ''}
+      <path d="${path}" fill="none" stroke="var(--gold-deep)" stroke-width="2.2"/>
+      ${xlabels}
+      <line x1="${padL}" y1="${padT}" x2="${padL}" y2="${H-padB}" stroke="var(--hairline-strong)" stroke-width="1"/>
+    </svg>`;
+    container.innerHTML = svg;
+  }
+
+  /* ===================== SENSIBILIDAD ===================== */
+  function populateSensSelectors(){
+    const selX = document.getElementById('sel-x');
+    const selY = document.getElementById('sel-y');
+    const selM = document.getElementById('sel-metric');
+    selX.innerHTML = Object.keys(VARS).map(k=>`<option value="${k}">${VARS[k].label}</option>`).join('');
+    selY.innerHTML = selX.innerHTML;
+    selM.innerHTML = Object.keys(METRICS).map(k=>`<option value="${k}">${METRICS[k].label}</option>`).join('');
+    selX.value = 'price';
+    selY.value = 'cf';
+    selM.value = 'npv';
+    [selX,selY,selM].forEach(s=> s.addEventListener('change', renderSensitivity));
+  }
+
+  function lerpColor(t, invert){
+    // t in [0,1]; red -> cream -> green
+    if(invert) t = 1 - t;
+    const red = [140,47,47], mid = [251,247,237], green=[47,82,51];
+    let a,b,f;
+    if(t < 0.5){ a=red; b=mid; f=t/0.5; } else { a=mid; b=green; f=(t-0.5)/0.5; }
+    const c = a.map((v,i)=> Math.round(v + (b[i]-v)*f));
+    return `rgb(${c[0]},${c[1]},${c[2]})`;
+  }
+
+  function renderSensitivity(){
+    const xKey = document.getElementById('sel-x').value;
+    const yKey = document.getElementById('sel-y').value;
+    const mKey = document.getElementById('sel-metric').value;
+    const container = document.getElementById('heat-container');
+
+    if(xKey === yKey){
+      container.innerHTML = '<p class="empty-msg">Elige dos variables distintas para cruzar.</p>';
+      return;
+    }
+
+    const xDef = VARS[xKey], yDef = VARS[yKey], mDef = METRICS[mKey];
+    const STEPS = 7;
+
+    function pointsFor(def, current){
+      const span = Math.min(def.max - def.min, (def.max - def.min) * 0.3);
+      let lo = current - span/2;
+      let hi = current + span/2;
+      if(lo < def.min){ hi += (def.min - lo); lo = def.min; }
+      if(hi > def.max){ lo -= (hi - def.max); hi = def.max; }
+      lo = Math.max(def.min, lo);
+      hi = Math.min(def.max, hi);
+      const stepSize = (hi - lo) / (STEPS - 1) || def.step;
+      const arr = [];
+      for(let i=0;i<STEPS;i++){
+        let v = lo + i*stepSize;
+        v = def.min + Math.round((v-def.min)/def.step)*def.step;
+        v = Math.max(def.min, Math.min(def.max, v));
+        arr.push(v);
+      }
+      return arr;
+    }
+
+    function closestIndex(points, target){
+      let bestI = 0, bestD = Infinity;
+      points.forEach((v,i)=>{ const d = Math.abs(v-target); if(d < bestD){ bestD = d; bestI = i; } });
+      return bestI;
+    }
+
+    const xPoints = pointsFor(xDef, state[xKey]);
+    const yPoints = pointsFor(yDef, state[yKey]);
+    const centerXIndex = closestIndex(xPoints, state[xKey]);
+    const centerYIndex = closestIndex(yPoints, state[yKey]);
+
+    const grid = [];
+    let allVals = [];
+    yPoints.forEach(yv=>{
+      const row = [];
+      xPoints.forEach(xv=>{
+        const testInputs = Object.assign({}, state, { [xKey]: xv, [yKey]: yv });
+        const r = calcProjection(testInputs);
+        let val = r[mKey];
+        if(mKey === 'paybackMonth' && val === null) val = testInputs.n * 1.4; // penalize "no recovery" for color scale
+        row.push({ raw: r[mKey], val });
+        allVals.push(val);
+      });
+      grid.push(row);
+    });
+
+    const minV = Math.min(...allVals), maxV = Math.max(...allVals);
+    const rangeV = (maxV - minV) || 1;
+
+    let html = '<table class="heat"><thead><tr><th></th>';
+    xPoints.forEach(xv=>{ html += `<th>${fmtByType(xv, xDef.fmt)}</th>`; });
+    html += '</tr></thead><tbody>';
+
+    yPoints.forEach((yv,ri)=>{
+      html += `<tr><th>${fmtByType(yv, yDef.fmt)}</th>`;
+      grid[ri].forEach((cell,ci)=>{
+        const t = (cell.val - minV) / rangeV;
+        const bg = lerpColor(t, !mDef.higherBetter);
+        const isCenter = ri===centerYIndex && ci===centerXIndex;
+        const display = mDef.fmt==='meses' ? fmtMeses(cell.raw) : fmtByType(cell.raw, mDef.fmt);
+        html += `<td class="${isCenter?'center-cell':''}" style="background:${bg}; color:#1a1a1a;">${display}</td>`;
+      });
+      html += '</tr>';
+    });
+    html += '</tbody></table>';
+    container.innerHTML = html;
+  }
+
+  /* ===================== ESCENARIOS ===================== */
+  const STORAGE_KEY = 'whatif_generico_escenarios_v1';
+
+  function loadScenarios(){
+    try{
+      const raw = localStorage.getItem(STORAGE_KEY);
+      return raw ? JSON.parse(raw) : [];
+    }catch(e){ return []; }
+  }
+  function saveScenarios(list){
+    try{ localStorage.setItem(STORAGE_KEY, JSON.stringify(list)); }catch(e){ /* almacenamiento no disponible */ }
+  }
+
+  function renderScenarios(){
+    const list = loadScenarios();
+    const wrap = document.getElementById('scenarios-table-wrap');
+    const currentR = calcProjection(state);
+
+    if(list.length === 0){
+      wrap.innerHTML = `
+        <table class="scenarios">
+          <thead><tr><th>Nombre</th><th>Utilidad neta mes 1</th><th>Utilidad acumulada</th><th>VPN</th><th>Payback</th><th></th></tr></thead>
+          <tbody>
+            <tr class="current-row">
+              <td>Actual (sin guardar)</td>
+              <td class="num">${fmtMoney(currentR.netIncomeM1)}</td>
+              <td class="num">${fmtMoney(currentR.finalCum)}</td>
+              <td class="num">${fmtMoney(currentR.npv)}</td>
+              <td class="num">${fmtMeses(currentR.paybackMonth)}</td>
+              <td></td>
+            </tr>
+          </tbody>
+        </table>
+        <p class="empty-msg">Aún no guardas ningún escenario. Ponle nombre al escenario actual y guárdalo para compararlo más adelante.</p>
+      `;
+      document.getElementById('scenario-chart-wrap').style.display = 'none';
+      return;
+    }
+
+    let rows = `
+      <tr class="current-row">
+        <td>Actual (sin guardar)</td>
+        <td class="num">${fmtMoney(currentR.netIncomeM1)}</td>
+        <td class="num">${fmtMoney(currentR.finalCum)}</td>
+        <td class="num">${fmtMoney(currentR.npv)}</td>
+        <td class="num">${fmtMeses(currentR.paybackMonth)}</td>
+        <td></td>
+      </tr>
+    `;
+    list.forEach(sc=>{
+      const r = calcProjection(sc.inputs);
+      rows += `
+        <tr>
+          <td>${escapeHtml(sc.name)}</td>
+          <td class="num">${fmtMoney(r.netIncomeM1)}</td>
+          <td class="num">${fmtMoney(r.finalCum)}</td>
+          <td class="num">${fmtMoney(r.npv)}</td>
+          <td class="num">${fmtMeses(r.paybackMonth)}</td>
+          <td><button class="btn ghost" data-id="${sc.id}">Eliminar</button></td>
+        </tr>
+      `;
+    });
+
+    wrap.innerHTML = `
+      <table class="scenarios">
+        <thead><tr><th>Nombre</th><th>Utilidad neta mes 1</th><th>Utilidad acumulada</th><th>VPN</th><th>Payback</th><th></th></tr></thead>
+        <tbody>${rows}</tbody>
+      </table>
+    `;
+    wrap.querySelectorAll('button[data-id]').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        const id = btn.getAttribute('data-id');
+        const filtered = loadScenarios().filter(s=> s.id !== id);
+        saveScenarios(filtered);
+        renderScenarios();
+      });
+    });
+
+    drawScenarioChart(list, currentR);
+  }
+
+  function escapeHtml(s){
+    return String(s).replace(/[&<>"']/g, c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  }
+
+  function drawScenarioChart(list, currentR){
+    document.getElementById('scenario-chart-wrap').style.display = 'block';
+    const items = [{ name:'Actual', val: currentR.finalCum, current:true }]
+      .concat(list.map(sc=>({ name: sc.name, val: calcProjection(sc.inputs).finalCum, current:false })));
+
+    const W = 900, H = 260, padL = 80, padR = 24, padT = 20, padB = 50;
+    const maxV = Math.max(...items.map(i=>i.val), 0);
+    const minV = Math.min(...items.map(i=>i.val), 0);
+    const range = (maxV - minV) || 1;
+    const zeroY = padT + (1 - (0-minV)/range) * (H-padT-padB);
+    const bw = (W - padL - padR) / items.length;
+
+    let bars = '';
+    items.forEach((it,i)=>{
+      const barY = padT + (1 - (it.val - minV)/range) * (H-padT-padB);
+      const top = Math.min(barY, zeroY);
+      const h = Math.abs(barY - zeroY);
+      const cx = padL + i*bw + bw/2;
+      const color = it.current ? 'var(--gold-deep)' : (it.val>=0 ? 'var(--green)' : 'var(--red)');
+      bars += `<rect x="${(padL+i*bw+bw*0.2).toFixed(1)}" y="${top.toFixed(1)}" width="${(bw*0.6).toFixed(1)}" height="${Math.max(h,1).toFixed(1)}" fill="${color}"/>`;
+      bars += `<text x="${cx.toFixed(1)}" y="${(H-padB+16).toFixed(1)}" text-anchor="middle" font-size="10" fill="var(--ink-soft)" class="axis-label">${escapeHtml(it.name)}</text>`;
+      bars += `<text x="${cx.toFixed(1)}" y="${(top-6).toFixed(1)}" text-anchor="middle" font-size="10" fill="var(--ink)">${fmtMoney(it.val)}</text>`;
+    });
+
+    const svg = `
+    <svg viewBox="0 0 ${W} ${H}" width="100%" style="max-width:100%; height:auto; display:block;">
+      <line x1="${padL}" y1="${zeroY.toFixed(1)}" x2="${W-padR}" y2="${zeroY.toFixed(1)}" stroke="var(--ink-soft)" stroke-width="1"/>
+      ${bars}
+    </svg>`;
+    document.getElementById('scenario-chart').innerHTML = svg;
+  }
+
+  /* ===================== TABS ===================== */
+  function setupTabs(){
+    document.querySelectorAll('.tab-btn').forEach(btn=>{
+      btn.addEventListener('click', ()=>{
+        document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));
+        document.querySelectorAll('.panel').forEach(p=>p.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('tab-'+btn.dataset.tab).classList.add('active');
+        if(btn.dataset.tab === 'sensibilidad') renderSensitivity();
+      });
+    });
+  }
+
+  /* ===================== INIT ===================== */
+  function renderAll(){
+    renderResultados();
+    renderSensitivity();
+    renderScenarios();
+  }
+
+  document.getElementById('btn-save-scenario').addEventListener('click', ()=>{
+    const nameInput = document.getElementById('scenario-name');
+    const name = nameInput.value.trim();
+    if(!name){ nameInput.focus(); return; }
+    const list = loadScenarios();
+    list.push({ id: 'sc_'+Date.now(), name, inputs: Object.assign({}, state), savedAt: new Date().toISOString() });
+    saveScenarios(list);
+    nameInput.value = '';
+    renderScenarios();
+  });
+
+  buildSliders();
+  populateSensSelectors();
+  setupTabs();
+  renderAll();
+
+})();
+</script>
+</body>
+</html>

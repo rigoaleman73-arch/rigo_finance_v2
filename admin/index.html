@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Admin V3.2 | Rigo Finance</title>
+  <link rel="stylesheet" href="../css/global.css">
+  <link rel="stylesheet" href="../css/admin.css">
+  <style>
+    /* Estilo premium tipo Excel para saber qué menú está activo y seleccionado */
+    .menu a { cursor: pointer; display: block; padding: 10px; border-radius: 4px; transition: all 0.2s; }
+    .menu a:hover { background: #16222f; color: #b5834c; }
+    .menu a.active-excel { background: #1b2a3a !important; color: #b5834c !important; font-weight: 700; border-left: 4px solid #b5834c; }
+  </style>
+</head>
+<body>
+
+  <header id="site-header"></header>
+  
+  <main class="section">
+    <span class="eyebrow">ADMIN V3.2</span>
+    <div class="admin-head">
+      <div>
+        <h1>Panel de administración</h1>
+        <p>Plataforma financiera automatizada conectada a Supabase Cloud.</p>
+      </div>
+      <button class="btn primary" id="newArticle">+ Nuevo artículo</button>
+    </div>
+    
+    <div class="admin-grid">
+      <!-- Menú de navegación lateral izquierdo -->
+      <aside class="card menu">
+        <h3>Contenido</h3>
+        <a id="menu-articulos">Artículos</a>
+        <a id="menu-modelos">Modelos</a>
+        <a id="menu-documentos">Documentos</a>
+        <a id="menu-multimedia">Multimedia</a>
+        <a id="menu-config">Configuración</a>
+      </aside>
+      
+      <!-- Zona central donde se dibujarán las tablas dinámicas -->
+      <section></section>
+    </div>
+  </main>
+
+  <footer id="site-footer"></footer>
+
+  <!-- CABLES DE CONEXIÓN OBLIGATORIOS -->
+  <script src="../js/navigation.js"></script>
+  <script src="../js/supabase-local.js"></script>
+  <script src="../js/admin.js"></script>
+
+</body>
+</html>
+

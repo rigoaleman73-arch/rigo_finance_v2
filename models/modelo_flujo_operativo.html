@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simulador Avanzado de Flujo de Efectivo Operativo</title>
+    <!-- Cargar Chart.js desde CDN confiable -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #2563eb;
+            --success: #16a34a;
+            --danger: #dc2626;
+            --warning: #ea580c;
+            --gray-bg: #f8fafc;
+            --border: #e2e8f0;
+            --text: #1e293b;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 11px;
+            color: var(--text);
+            margin: 0;
+            padding: 4px;
+            background-color: transparent;
+        }
+
+        .container {
+            max-width: 100%;
+            margin: 0 auto;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            background: #ffffff;
+            padding: 10px;
+            box-sizing: border-box;
+        }
+
+        h2 {
+            font-size: 13px;
+            margin: 0 0 10px 0;
+            color: var(--text);
+            border-bottom: 2px solid var(--border);
+            padding-bottom: 4px;
+            text-transform: uppercase;
+        }
+
+        h3 {
+            font-size: 11px;
+            margin: 0 0 6px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: #64748b;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 2px;
+        }
+
+        .grid-inputs {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .section-card {
+            background: var(--gray-bg);
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid var(--border);
+        }
+
+        .control-group {
+            margin-bottom: 6px;
+        }
+
+        .control-group:last-child {
+            margin-bottom: 0;
+        }
+
+        .control-label {
+            display: flex;
+            justify-content: space-between;
+            font-weight: 500;
+            margin-bottom: 1px;
+        }
+
+        .control-label span.value {
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        input[type="range"] {
+            width: 100%;
+            margin: 2px 0;
+            cursor: pointer;
+        }
+
+        /* Bloque Central Visual y Resultados */
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        @media (max-width: 600px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .results-panel {
+            background: #0f172a;
+            color: #ffffff;
+            padding: 10px;
+            border-radius: 4px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+
+        .results-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 6px;
+        }
+
+        .result-item {
+            border-bottom: 1px solid #334155;
+            padding-bottom: 2px;
+        }
+
+        .result-item.total {
+            grid-column: span 2;
+            border-bottom: none;
+            padding-top: 4px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .result-label {
+            font-size: 10px;
+            color: #94a3b8;
+        }
+
+        .result-value {
+            font-size: 13px;
+            font-weight: 700;
+        }
+
+        .result-value.inflow { color: #4ade80; }
+        .result-value.outflow { color: #f87171; }
+
+        .final-balance {
+            font-size: 16px;
+            font-weight: 800;
+        }
+
+        .chart-card {
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 6px;
+            background: #ffffff;
+            height: 160px;
+            position: relative;
+        }
+
+        /* Alertas de requerimiento */
+        .alert-box {
+            margin-bottom: 10px;
+            padding: 6px 10px;
+            border-radius: 4px;
+            font-weight: 600;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        .alert-danger {
+            background-color: #fef2f2;
+            border: 1px solid #fee2e2;
+            color: var(--danger);
+        }
+
+        .alert-success {
+            background-color: #f0fdf4;
+            border: 1px solid #dcfce7;
+            color: var(--success);
+        }
+
+        /* Histórico */
+        .history-section {
+            margin-top: 10px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 4px;
+            font-size: 11px;
+        }
+
+        th, td {
+            border: 1px solid var(--border);
+            padding: 5px 6px;
+            text-align: right;
+        }
+
+        th {
+            background-color: #f1f5f9;
+            color: #475569;
+            font-weight: 600;
+        }
+
+        td:first-child, th:first-child {
+            text-align: left;
+            font-weight: 500;
+        }
+
+        .text-success { color: var(--success); font-weight: 600; }
+        .text-danger { color: var(--danger); font-weight: 600; }
+    </style>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+.export-toolbar{position:fixed;top:14px;right:14px;display:flex;gap:8px;z-index:99999;}
+.export-toolbar button{width:40px;height:40px;border-radius:50%;border:1px solid rgba(0,0,0,.15);background:#fff;color:#222;font-size:16px;cursor:pointer;box-shadow:0 2px 10px rgba(0,0,0,.25);}
+.export-toolbar button:hover{background:#f0f0f0;}
+@media print{ .export-toolbar{display:none !important;} }
+</style>
+</head>
+<body>
+<div class="export-toolbar">
+  <button onclick="window.print()" title="Imprimir">🖨️</button>
+  <button onclick="__erp_exportToExcel()" title="Exportar a Excel">📊</button>
+  <button onclick="window.print()" title="Guardar como PDF (usa el diálogo de impresión)">📄</button>
+  <button onclick="__erp_shareWhatsApp()" title="Compartir por WhatsApp">💬</button>
+</div>
+
+
+<div class="container">
+    <h2>Simulador Avanzado de Flujo Operativo</h2>
+    
+    <!-- Sección de Sliders -->
+    <div class="grid-inputs">
+        <!-- Balance Inicial -->
+        <div class="section-card">
+            <h3>Efectivo Inicial</h3>
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="saldoInicial">Saldo Inicial Disp.</label>
+                    <span class="value" id="lblSaldoInicial">$0</span>
+                </div>
+                <input type="range" id="saldoInicial" min="0" max="200000" step="5000" value="45000">
+            </div>
+        </div>
+
+        <!-- 5 Conceptos de Entradas -->
+        <div class="section-card">
+            <h3>Entradas de Efectivo (5)</h3>
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="cobranza">1. Cobranza Clientes</label>
+                    <span class="value" id="lblCobranza">$0</span>
+                </div>
+                <input type="range" id="cobranza" min="0" max="400000" step="5000" value="180000">
+            </div>
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="ventasContado">2. Ventas de Contado</label>
+                    <span class="value" id="lblVentasContado">$0</span>
+                </div>
+                <input type="range" id="ventasContado" min="0" max="200000" step="5000" value="65000">
+            </div>
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="anticipos">3. Anticipos de Clientes</label>
+                    <span class="value" id="lblAnticipos">$0</span>
+                </div>
+                <input type="range" id="anticipos" min="0" max="100000" step="2000" value="15000">
+            </div>
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="recupCartera">4. Recuperación Cartera Vencida</label>
+                    <span class="value" id="lblRecupCartera">$0</span>
+                </div>
+                <input type="range" id="recupCartera" min="0" max="50000" step="1000" value="8000">
+            </div>
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="otrosIngresos">5. Otros Ingresos Op.</label>
+                    <span class="value" id="lblOtrosIngresos">$0</span>
+                </div>
+                <input type="range" id="otrosIngresos" min="0" max="50000" step="1000" value="4000">
+            </div>
+        </div>
+
+        <!-- 5 Conceptos de Salidas -->
+        <div class="section-card">
+            <h3>Salidas de Efectivo (5)</h3>
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="proveedores">1. Pago a Proveedores</label>
+                    <span class="value" id="lblProveedores">$0</span>
+                </div>
+                <input type="range" id="proveedores" min="0" max="300000" step="5000" value="110000">
+            </div>
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="nomina">2. Nómina y Salarios</label>
+                    <span class="value" id="lblNomina">$0</span>
+                </div>
+                <input type="range" id="nomina" min="0" max="150000" step="2000" value="55000">
+            </div>
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="impuestos">3. Impuestos Operativos (IVA/ISR)</label>
+                    <span class="value" id="lblImpuestos">$0</span>
+                </div>
+                <input type="range" id="impuestos" min="0" max="80000" step="1000" value="18000">
+            </div>
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="servicios">4. Servicios y Renta</label>
+                    <span class="value" id="lblServicios">$0</span>
+                </div>
+                <input type="range" id="servicios" min="0" max="50000" step="1000" value="12000">
+            </div>
+            <div class="control-group">
+                <div class="control-label">
+                    <label for="mantenimiento">5. Mantenimiento y Logística</label>
+                    <span class="value" id="lblMantenimiento">$0</span>
+                </div>
+                <input type="range" id="mantenimiento" min="0" max="40000" step="1000" value="7000">
+            </div>
+        </div>
+    </div>
+
+    <!-- Resultados y Gráfica -->
+    <div class="dashboard-grid">
+        <div class="results-panel">
+            <div class="results-grid">
+                <div class="result-item">
+                    <div class="result-label">Total Entradas (+)</div>
+                    <div class="result-value inflow" id="resTotalEntradas">$0</div>
+                </div>
+                <div class="result-item">
+                    <div class="result-label">Total Salidas (-)</div>
+                    <div class="result-value outflow" id="resTotalSalidas">$0</div>
+                </div>
+                <div class="result-item" style="grid-column: span 2;">
+                    <div class="result-label">Flujo Neto del Periodo</div>
+                    <div class="result-value" id="resFlujoNeto">$0</div>
+                </div>
+                <div class="result-item total">
+                    <div class="result-label" style="color: #cbd5e1;">SALDO FINAL PROYECTADO</div>
+                    <div class="final-balance" id="resSaldoFinal">$0</div>
+                </div>
+            </div>
+        </div>
+        <div class="chart-card">
+            <canvas id="flowChart"></canvas>
+        </div>
+    </div>
+
+    <!-- Indicador de Alerta de Requerimiento -->
+    <div id="alertaEfectivo" class="alert-box"></div>
+
+    <!-- Tabla Histórica (5 Días Previos) -->
+    <div class="history-section">
+        <h3>Histórico de Tendencia (Últimos 5 Días)</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Concepto / Día</th>
+                    <th id="th-5">Día -5</th>
+                    <th id="th-4">Día -4</th>
+                    <th id="th-3">Día -3</th>
+                    <th id="th-2">Día -2</th>
+                    <th id="th-1">Día -1</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>(+) Ingresos Cobrados</td>
+                    <td>$240,000</td>
+                    <td>$195,000</td>
+                    <td>$210,000</td>
+                    <td>$285,000</td>
+                    <td>$170,000</td>
+                </tr>
+                <tr>
+                    <td>(-) Egresos Pagados</td>
+                    <td>$215,000</td>
+                    <td>$220,000</td>
+                    <td>$185,000</td>
+                    <td>$190,000</td>
+                    <td>$205,000</td>
+                </tr>
+                <tr>
+                    <td>(=) Flujo Neto Diario</td>
+                    <td class="text-success">$25,000</td>
+                    <td class="text-danger">-$25,000</td>
+                    <td class="text-success">$25,000</td>
+                    <td class="text-success">$95,000</td>
+                    <td class="text-danger">-$35,000</td>
+                </tr>
+                <tr style="background-color: #f8fafc; font-weight: bold;">
+                    <td>Saldo Caja Final</td>
+                    <td>$40,000</td>
+                    <td>$15,000</td>
+                    <td>$40,000</td>
+                    <td>$135,000</td>
+                    <td>$100,000</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    // Formateador de moneda de alta precisión
+    const formatter = new Intl.NumberFormat('es-MX', {
+        style: 'currency',
+        currency: 'MXN',
+        minimumFractionDigits: 0
+    });
+
+    // Mapeo dinámico de elementos
+    const inputs = {
+        saldoInicial: document.getElementById('saldoInicial'),
+        cobranza: document.getElementById('cobranza'),
+        ventasContado: document.getElementById('ventasContado'),
+        anticipos: document.getElementById('anticipos'),
+        recupCartera: document.getElementById('recupCartera'),
+        otrosIngresos: document.getElementById('otrosIngresos'),
+        proveedores: document.getElementById('proveedores'),
+        nomina: document.getElementById('nomina'),
+        impuestos: document.getElementById('impuestos'),
+        servicios: document.getElementById('servicios'),
+        mantenimiento: document.getElementById('mantenimiento')
+    };
+
+    const labels = {
+        saldoInicial: document.getElementById('lblSaldoInicial'),
+        cobranza: document.getElementById('lblCobranza'),
+        ventasContado: document.getElementById('lblVentasContado'),
+        anticipos: document.getElementById('lblAnticipos'),
+        recupCartera: document.getElementById('lblRecupCartera'),
+        otrosIngresos: document.getElementById('lblOtrosIngresos'),
+        proveedores: document.getElementById('lblProveedores'),
+        nomina: document.getElementById('lblNomina'),
+        impuestos: document.getElementById('lblImpuestos'),
+        servicios: document.getElementById('lblServicios'),
+        mantenimiento: document.getElementById('lblMantenimiento')
+    };
+
+    const resTotalEntradas = document.getElementById('resTotalEntradas');
+    const resTotalSalidas = document.getElementById('resTotalSalidas');
+    const resFlujoNeto = document.getElementById('resFlujoNeto');
+    const resSaldoFinal = document.getElementById('resSaldoFinal');
+    const alertaEfectivo = document.getElementById('alertaEfectivo');
+
+    // Inicializar Gráfica de Barras
+    const ctx = document.getElementById('flowChart').getContext('2d');
+    const flowChart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: ['Entradas', 'Salidas', 'Flujo Neto'],
+            datasets: [{
+                data: [0, 0, 0],
+                backgroundColor: ['#4ade80', '#f87171', '#3b82f6'],
+                borderRadius: 4,
+                borderWidth: 0
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: { legend: { display: false } },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: { font: { size: 9 } }
+                },
+                x: {
+                    ticks: { font: { size: 10, weight: 'bold' } }
+                }
+            }
+        }
+    });
+
+    // Dinamizar encabezados de fechas históricas reales basadas en el día de hoy
+    function inicializarFechasHistoricas() {
+        const opciones = { day: 'numeric', month: 'short' };
+        for (let i = 1; i <= 5; i++) {
+            const fecha = new Date();
+            fecha.setDate(fecha.getDate() - (6 - i));
+            document.getElementById(`th-${i}`).textContent = fecha.toLocaleDateString('es-MX', opciones);
+        }
+    }
+
+    function calcularFlujo() {
+        const vals = {};
+        Object.keys(inputs).forEach(key => {
+            vals[key] = parseFloat(inputs[key].value) || 0;
+            labels[key].textContent = formatter.format(vals[key]);
+        });
+
+        // Sumas de las 5 categorías correspondientes
+        const totalEntradas = vals.cobranza + vals.ventasContado + vals.anticipos + vals.recupCartera + vals.otrosIngresos;
+        const totalSalidas = vals.proveedores + vals.nomina + vals.impuestos + vals.servicios + vals.mantenimiento;
+        const flujoNeto = totalEntradas - totalSalidas;
+        const saldoFinal = vals.saldoInicial + flujoNeto;
+
+        // Renderizado de textos financieros
+        resTotalEntradas.textContent = formatter.format(totalEntradas);
+        resTotalSalidas.textContent = formatter.format(totalSalidas);
+        
+        resFlujoNeto.textContent = formatter.format(flujoNeto);
+        resFlujoNeto.style.color = flujoNeto >= 0 ? '#4ade80' : '#f87171';
+
+        resSaldoFinal.textContent = formatter.format(saldoFinal);
+        resSaldoFinal.style.color = saldoFinal >= 0 ? '#4ade80' : '#f87171';
+
+        // Actualizar datos de la gráfica en tiempo real
+        flowChart.data.datasets[0].data = [totalEntradas, totalSalidas, flujoNeto];
+        flowChart.update();
+
+        // Lógica predictiva de requerimiento financiero
+        if (saldoFinal < 0) {
+            alertaEfectivo.className = "alert-box alert-danger";
+            alertaEfectivo.textContent = `⚠️ Alerta de liquidez: Se proyecta un déficit operativo. Requieres un fondeo mínimo de ${formatter.format(Math.abs(saldoFinal))} para cubrir tus compromisos inmediatos.`;
+        } else {
+            alertaEfectivo.className = "alert-box alert-success";
+            alertaEfectivo.textContent = `✅ Estructura Financiera Estable: El periodo cierra con un remanente disponible de ${formatter.format(saldoFinal)}.`;
+        }
+    }
+
+    // Escuchadores de eventos
+    Object.values(inputs).forEach(input => {
+        input.addEventListener('input', calcularFlujo);
+    });
+
+    // Arranque de la interfaz
+    inicializarFechasHistoricas();
+    calcularFlujo();
+</script>
+
+
+<script>
+function __erp_findLabel(el){
+  if (el.id) {
+    const lbl = document.querySelector(`label[for="${el.id}"]`);
+    if (lbl && lbl.textContent.trim()) return lbl.textContent.trim();
+  }
+  let node = el.closest('div, li, tr, section') || el.parentElement;
+  if (node) {
+    const clone = node.cloneNode(true);
+    clone.querySelectorAll('input, select, script, button').forEach(n => n.remove());
+    const txt = clone.textContent.replace(/\s+/g,' ').trim();
+    if (txt) return txt.slice(0, 90);
+  }
+  return el.id || el.name || 'Campo';
+}
+function __erp_collectSliders(){
+  return Array.from(document.querySelectorAll('input[type=range], input[type=number], input[type=text]')).map(el => ({
+    Campo: __erp_findLabel(el), Valor: el.value
+  })).filter(r => r.Valor !== '');
+}
+function __erp_collectKPIs(){
+  const nodes = Array.from(document.querySelectorAll('[class*="val" i], [class*="result" i], [class*="kpi" i], [class*="verdict" i], [class*="pan-value" i]'));
+  const out = []; const seenTxt = new Set();
+  nodes.forEach(el => {
+    if (el.querySelector('input, select, table')) return;
+    const txt = el.textContent.replace(/\s+/g,' ').trim();
+    if (!txt || txt.length > 70) return;
+    if (seenTxt.has(txt)) return;
+    seenTxt.add(txt);
+    out.push({ Etiqueta: __erp_findLabel(el), Valor: txt });
+  });
+  return out;
+}
+function __erp_collectTables(){
+  return Array.from(document.querySelectorAll('table')).map((t,i) => ({
+    name: 'Tabla' + (i+1),
+    rows: Array.from(t.rows).map(r => Array.from(r.cells).map(c => c.textContent.trim()))
+  })).filter(t => t.rows.length);
+}
+function __erp_exportToExcel(){
+  const wb = XLSX.utils.book_new();
+  const sliders = __erp_collectSliders();
+  if (sliders.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(sliders), 'Controles');
+  const kpis = __erp_collectKPIs();
+  if (kpis.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(kpis), 'Resultados');
+  __erp_collectTables().forEach(t => {
+    XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet(t.rows), t.name.slice(0,31));
+  });
+  if (!wb.SheetNames.length) XLSX.utils.book_append_sheet(wb, XLSX.utils.aoa_to_sheet([['No se detectaron datos exportables autom\u00e1ticamente']]), 'Info');
+  const fname = (document.title || 'modelo').replace(/[^a-z0-9]+/gi,'_').toLowerCase().slice(0,60) + '.xlsx';
+  XLSX.writeFile(wb, fname);
+}
+function __erp_shareWhatsApp(){
+  const kpis = __erp_collectKPIs().slice(0, 6);
+  const texto = `${document.title}\n` + kpis.map(k => `${k.Etiqueta}: ${k.Valor}`).join('\n');
+  if (navigator.share) { navigator.share({ title: document.title, text: texto }).catch(()=>{}); }
+  else { window.open('https://wa.me/?text=' + encodeURIComponent(texto), '_blank'); }
+}
+</script>
+</body>
+</html>
